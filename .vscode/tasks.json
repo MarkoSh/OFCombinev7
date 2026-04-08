@@ -1,0 +1,73 @@
+{
+	"version": "2.0.0",
+	"tasks": [{
+			"label": "Build TSC",
+			"type": "shell",
+			"command": "npx",
+			"args": ["tsc", "-p", "tsconfig.json"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": ["$tsc"],
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"clear": true
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"Delete",
+				"Copy",
+				"Build SASS"
+			]
+		},
+		{
+			"label": "Delete",
+			"type": "shell",
+			"command": "rm -rf build/ && mkdir build"
+		},
+		{
+			"label": "Copy",
+			"type": "shell",
+			"command": "cp -r src/manifest.json build/ && cp -r src/img build/ && cp -r src/html build/ && cp -r src/vendor build/"
+		},
+		{
+			"label": "Watch TSC",
+			"type": "shell",
+			"command": "npx",
+			"args": ["tsc", "-w", "-p", "tsconfig.json"],
+			"isBackground": true,
+			"problemMatcher": ["$tsc-watch"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "Build SASS",
+			"type": "shell",
+			"command": "sass src/scss/style.scss:build/css/style.css",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "Watch SASS",
+			"type": "shell",
+			"isBackground": true,
+			"command": "sass --watch src/scss/style.scss:build/css/style.css",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+		}
+	]
+}

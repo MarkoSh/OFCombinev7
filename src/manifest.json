@@ -1,0 +1,45 @@
+{
+	"manifest_version": 3,
+	"name": "OFCombine",
+	"short_name": "OFCombine",
+	"version": "7.0.0",
+	"description": "OFCombine",
+	"background": {
+		"service_worker": "scripts/background.js"
+	},
+	"action": {
+		"default_title": "OFCombine",
+		"default_icon": "img/icon.png"
+	},
+	"icons": {
+		"16": "img/icon.png",
+		"32": "img/icon.png",
+		"48": "img/icon.png",
+		"96": "img/icon.png"
+	},
+	"content_scripts": [
+		{
+			"js": [
+				"scripts/content.js"
+			],
+			"matches": [
+				"*://onlyfans.com/*"
+			],
+			"run_at": "document_start",
+			"all_frames": true
+		}
+	],
+	"permissions": [
+		"sidePanel",
+		"cookies",
+		"declarativeNetRequest",
+		"declarativeNetRequestWithHostAccess"
+	],
+	"side_panel": {
+		"default_path": "html/sidepanel.html"
+	},
+	"host_permissions": [
+		"*://onlyfans.com/*",
+		"*://*.onlyfans.com/*"
+	]
+}
