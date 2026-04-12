@@ -17,27 +17,9 @@
 		"48": "img/icon.png",
 		"96": "img/icon.png"
 	},
-	"content_scripts": [
-		{
-			"js": [
-				"scripts/content.js"
-			],
-			"matches": [
-				"*://onlyfans.com/*"
-			],
-			"run_at": "document_start",
-			"all_frames": true
-		}
-	],
 	"permissions": [
-		"sidePanel",
-		"cookies",
-		"declarativeNetRequest",
-		"declarativeNetRequestWithHostAccess"
+		"scripting"
 	],
-	"side_panel": {
-		"default_path": "html/sidepanel.html"
-	},
 	"host_permissions": [
 		"*://onlyfans.com/*",
 		"*://*.onlyfans.com/*"

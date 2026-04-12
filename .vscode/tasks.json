@@ -33,7 +33,7 @@
 		{
 			"label": "Copy",
 			"type": "shell",
-			"command": "cp -r src/manifest.json build/ && cp -r src/img build/ && cp -r src/html build/ && cp -r src/vendor build/"
+			"command": "cp -r src/manifest.json build/ && cp -r src/img build/"
 		},
 		{
 			"label": "Watch TSC",
