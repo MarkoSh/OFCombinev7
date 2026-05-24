@@ -17,6 +17,19 @@
 		"48": "img/icon.png",
 		"96": "img/icon.png"
 	},
+	"web_accessible_resources": [
+		{
+			"resources": [
+				"htmls/*",
+				"vendor/*",
+				"scripts/*",
+				"css/*"
+			],
+			"matches": [
+				"*://onlyfans.com/*"
+			]
+		}
+	],
 	"permissions": [
 		"scripting"
 	],
