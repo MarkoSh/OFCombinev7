@@ -1,3 +1,5 @@
+@use "sass:list";
+
 .m-online {
     top: 1px;
     bottom: unset !important;
@@ -117,16 +119,43 @@ $spent_500: #BA55D3;
         );
 
         // Цикл @for для генерации классов .item-1, .item-2 и т.д.
-        @for $i from 1 through length($colors) {
+        @for $i from 1 through list.length($colors) {
             &.bound:nth-child(#{$i}) {
                 &:after {
                     content: ""; // Обязательно для отображения псевдоэлемента
-                    background: nth($colors, $i);
+                    background: list.nth($colors, $i);
                 }
             }
         }
     }
 }
+
+[at-attr="chat_message"] {
+    margin-bottom: 1em;
+
+    .message-tools {
+        flex: 1 1 100%;
+        padding: 3px 0;
+        a {
+            // margin: 0 1px;
+            padding: 3px;
+            border-radius: 3px;
+            display: inline-block;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(0deg,rgba(138,150,163,.12),rgba(138,150,163,.12));
+        }
+        
+    }
+
+    &.m-from-me {
+        .message-tools {
+            a {
+                background-image: linear-gradient(0deg,rgba(0,175,240,.12),rgba(0,175,240,.12));
+            }
+        }
+    }
+}
+
 
 
 .m-mode-dark {

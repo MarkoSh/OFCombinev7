@@ -1,7 +1,11 @@
+console.log('[BACKGROUND] OFCombine v7');
+
 async function inject(extensionRootUrl) {
 	if (window['hasBeenInjected']) return;
 
 	window['hasBeenInjected'] = true;
+
+	console.log('[INJECT] OFCombine v7');
 
 	class RequestQueue {
 		queue: Promise<void>;
@@ -205,8 +209,6 @@ async function inject(extensionRootUrl) {
 
 			window['OFCombine'] = $this;
 
-			console.log('OFCombine v7');
-
 			$this.init();
 		}
 
@@ -246,6 +248,106 @@ async function inject(extensionRootUrl) {
 
 		handler() {
 			const $this = this;
+
+			window['copyMessage'] = async (text) => {
+				showToast('Developing');
+
+				return;
+
+				const pre = document.createElement('pre');
+
+				pre.innerHTML = decodeURIComponent(text);
+
+				const textRaw = pre.innerText;
+
+				try {
+					await navigator.clipboard.writeText(textRaw);
+
+					showToast('Copied!');
+				} catch (error) {
+					showToast('Clipboard API failed!');
+				}
+			};
+
+			window['downloadMedia'] = (target) => {
+				const chat_message = target.closest('[at-attr="chat_message"]');
+
+				const { __vue__: vue } = chat_message;
+
+				const { media } = vue;
+
+				let isDrmOn = false;
+
+				const fulls = media.map(item => {
+					const { files } = item;
+
+					const { drm, full } = files;
+
+					if (drm) isDrmOn = true;
+
+					const { url } = full;
+
+					return url;
+				});
+
+				if (isDrmOn) {
+					showToast(`It's under DRM protection`);
+
+					return;
+				}
+
+				const activeIndex = (() => {
+					const el = chat_message.querySelector('.swiper');
+
+					if (el) {
+						const { swiper } = el;
+
+						const { activeIndex } = swiper;
+
+						return activeIndex;
+					}
+
+					return 0;
+				})();
+
+				const a = document.createElement('a');
+
+				a.href = fulls[activeIndex];
+
+				a.target = '_blank';
+
+				a.click();
+			};
+
+			window['translateMessage'] = () => {
+				showToast('Developing');
+
+				return;
+			};
+
+			window['showToast'] = (text) => {
+				const app: any = document.querySelector('[id="app"]');
+
+				if (app) {
+					const { __vue__: vue } = app;
+
+					const { showToast } = vue;
+
+					showToast({ text });
+				}
+			};
+
+			window['replyToMessage'] = (messageId) => {
+				const chat_footer: any = document.querySelector('.m-chat-footer');
+
+				if (chat_footer) {
+					const { __vue__: vue } = chat_footer;
+
+					const { $parent } = vue;
+
+					$parent.replyToMessageId = messageId;
+				}
+			};
 
 			const observer = async () => {
 				const chats__list = document.querySelector('.b-chats__list-wrapper');
@@ -618,7 +720,23 @@ async function inject(extensionRootUrl) {
 													if (userId) {
 														const int__userId = parseInt(userId);
 
-														const messages = <Map<number, any>>await $this.fetchMessages(int__userId);
+														const messages: Map<number, any> = (() => {
+															const chat_messages = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[at-attr="chat_message"]');
+
+															const messages = new Map();
+
+															chat_messages.forEach(chat_message => {
+																const { __vue__: vue } = chat_message;
+
+																const { message } = vue;
+
+																const { id: messageId } = message;
+
+																messages.set(messageId, message);
+															});
+
+															return messages;
+														})();
 
 														const fromUser = [...messages.values()].filter((message: any) => {
 															const { fromUser } = message;
@@ -654,6 +772,85 @@ async function inject(extensionRootUrl) {
 							}
 						}
 					}
+
+					const chat_messages = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[at-attr="chat_message"]');
+
+					chat_messages.forEach(chat_message => {
+						const isFromMe = chat_message.classList.contains('m-from-me');
+
+						const { __vue__: vue } = chat_message;
+
+						const {
+							toggleLikeMessage,
+							deleteMessages,
+							unsendQueue,
+							entityId: messageId,
+							message,
+							isCanCancel,
+							withUser,
+							hasMedia,
+							onReply
+						} = vue;
+
+						// debugger;
+
+						const { id: userId } = withUser;
+
+						window['toggleLikeMessage'] = toggleLikeMessage;
+
+						window['deleteMessages'] = deleteMessages;
+
+						const { chatId, queueId, text } = message;
+
+						const chat__message__time = chat_message.querySelector(':scope > .b-chat__message__time');
+
+						if (chat__message__time) {
+							const tools = chat_message.querySelector('.message-tools');
+
+							if (!tools) {
+								const tools = document.createElement('div');
+
+								tools.classList.add('message-tools');
+
+								chat__message__time.before(tools);
+
+								tools.innerHTML = ``;
+
+								if (isFromMe) {
+									tools.innerHTML += `
+									<a href="/my/chats/chat/${chatId}/?firstId=${messageId}" title="Link" target="_blank">🔗</a>
+									<a href="/my/chats/send?scheduleMessageId=${queueId}#forward" title="Forward" target="_blank">🗯️</a>`;
+
+									if (hasMedia) {
+										tools.innerHTML += `
+										<a href="#" onclick="downloadMedia(this)" title="Download">📥️</a>`;
+									}
+
+									tools.innerHTML += `
+									<a href="#" onclick="replyToMessage(${messageId})" title="Reply">↪️</a>
+									<a href="#" onclick="copyMessage(this, '')" title="Copy">📋️</a>
+									<a href="#" onclick="translateMessage(this, '')" title="Translate">💱</a>
+									<a href="#" onclick="deleteMessages({chatId: ${chatId}, messageId: ${messageId}})" title="Unsend">❌</a>`;
+								} else {
+									tools.innerHTML += `
+									<a href="/my/chats/chat/${chatId}/?firstId=${messageId}" title="Link" target="_blank">🔗</a>
+									<a href="#" onclick="toggleLikeMessage({messageId: ${messageId}, withUserId: ${userId}})" title="Like">❤️</a>
+									<a href="#" onclick="replyToMessage(${messageId})" title="Reply">↪️</a>
+									<a href="#" onclick="copyMessage(this, '')" title="Copy">📋️</a>`;
+
+									if (hasMedia) {
+										tools.innerHTML += `
+										<a href="#" onclick="downloadMedia(this)" title="Download">📥️</a>`;
+									}
+
+									tools.innerHTML += `
+									<a href="#" onclick="translateMessage(this, '')" title="Translate">💱</a>`;
+								}
+
+
+							}
+						}
+					});
 				} else {
 					card?.remove();
 				}
@@ -929,46 +1126,30 @@ async function inject(extensionRootUrl) {
 	const ofc = new OFCombine();
 }
 
-function injector() {
-	const observer = async () => {
-		const tabs = await chrome.tabs.query({
-			url: [
-				"*://onlyfans.com/*"
-			]
+async function injector() {
+	const tabs = await chrome.tabs.query({
+		url: [
+			"*://onlyfans.com/*"
+		]
+	});
+
+	tabs.map((tab: any) => {
+		const { id: tabId } = tab;
+
+		chrome.scripting.executeScript({
+			injectImmediately: true,
+			target: { tabId: tabId, allFrames: false },
+			func: inject,
+			args: [
+				chrome.runtime.getURL('/'),
+			],
+			world: "MAIN"
 		});
-
-		tabs.map((tab: any) => {
-			const { id: tabId } = tab;
-
-			chrome.scripting.executeScript({
-				injectImmediately: true,
-				target: { tabId: tabId, allFrames: false },
-				func: inject,
-				args: [
-					chrome.runtime.getURL('/'),
-				],
-				world: "MAIN"
-			});
-		});
-
-		setTimeout(observer, 100);
-	};
-
-	observer();
+	});
 }
 
-injector();
+chrome.runtime.onMessage.addListener((message: any, sender: MessageSender, sendResponse: Function) => {
+	sendResponse({ pong: true });
 
-chrome.runtime.onInstalled.addListener(() => {
-	chrome.alarms.create("keepAliveAlarm", {
-		periodInMinutes: 1,
-	});
-});
-
-chrome.alarms.onAlarm.addListener((alarm) => {
-	if (alarm.name === "keepAliveAlarm") {
-		console.log("Воркер проснулся в:", new Date().toLocaleTimeString());
-
-		// injector();
-	}
+	injector();
 });

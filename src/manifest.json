@@ -7,6 +7,18 @@
 	"background": {
 		"service_worker": "scripts/background.js"
 	},
+	"content_scripts": [
+		{
+			"js": [
+				"scripts/content.js"
+			],
+			"matches": [
+				"<all_urls>"
+			],
+			"run_at": "document_start",
+			"all_frames": false
+		}
+	],
 	"action": {
 		"default_title": "OFCombine",
 		"default_icon": "img/icon.png"
