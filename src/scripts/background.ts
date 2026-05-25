@@ -1,4 +1,4 @@
-async function inject() {
+async function inject(extensionRootUrl) {
 	if (window['hasBeenInjected']) return;
 
 	window['hasBeenInjected'] = true;
@@ -30,6 +30,16 @@ async function inject() {
 
 	interface GenerateOptions {
 		timestamp?: number;
+	}
+
+	function shuffle(array) {
+		for (let i = array.length - 1; i > 0; i--) {
+			// Pick a random index from 0 to i
+			const j = Math.floor(Math.random() * (i + 1));
+			// Swap elements array[i] and array[j]
+			[array[i], array[j]] = [array[j], array[i]];
+		}
+		return array;
 	}
 
 	const og: any = document.querySelector('[property="og:image"]');
@@ -193,6 +203,8 @@ async function inject() {
 		constructor() {
 			const $this = this;
 
+			window['OFCombine'] = $this;
+
 			console.log('OFCombine v7');
 
 			$this.init();
@@ -203,13 +215,13 @@ async function inject() {
 
 			$this.applyStyle();
 
-			$this.usersHandler();
+			$this.handler();
 		}
 
 		applyStyle() {
 			const $this = this;
 
-			const href = chrome.runtime.getURL('css/style.css');
+			const href = `${extensionRootUrl}css/style.css`;
 
 			const link = document.createElement('link');
 
@@ -232,7 +244,7 @@ async function inject() {
 			observer();
 		}
 
-		usersHandler() {
+		handler() {
 			const $this = this;
 
 			const observer = async () => {
@@ -407,7 +419,7 @@ async function inject() {
 											const days = diff / (1000 * 60 * 60 * 24);
 
 											if (200 < count) {
-												const lastReadDate = '>200mgs';
+												const lastReadDate = '>200msg';
 
 												if (last_read_date) last_read_date.textContent = lastReadDate;
 
@@ -416,7 +428,17 @@ async function inject() {
 												return;
 											}
 
-											if (31 < days || 200 < count) {
+											if (31 < days) {
+												const lastReadDate = '>1month';
+
+												if (last_read_date) last_read_date.textContent = lastReadDate;
+
+												resolve(lastReadDate);
+
+												return;
+											}
+
+											if (firstId == messageId) {
 												const lastReadDate = '>1month';
 
 												if (last_read_date) last_read_date.textContent = lastReadDate;
@@ -462,6 +484,173 @@ async function inject() {
 								}
 							} else {
 								card?.remove();
+							}
+						}
+					}
+
+					const binds = document.querySelector('[id="binds"]');
+
+					if (!binds) {
+						const chat__messages = document.querySelector('.b-chat__messages');
+
+						if (chat__messages) {
+							const binds = document.createElement('div');
+
+							binds.id = 'binds';
+
+							chat__messages.after(binds);
+
+							for (let i = 0; i < 24; i++) {
+								const bind = document.createElement('a');
+
+								bind.classList.add('bind');
+
+								bind.href = '#'
+
+								binds.appendChild(bind);
+
+								const currentBinds = (() => {
+									const item = localStorage.getItem('binds');
+
+									if (item) {
+										const json = JSON.parse(item);
+
+										return json;
+									}
+
+									return [];
+								})();
+
+								const clickedBind: any = currentBinds[i];
+
+								if (clickedBind) {
+									const { hint } = clickedBind;
+
+									bind.title = hint;
+
+									bind.classList.add('bound');
+								}
+
+								bind.onclick = async (e) => {
+									e.preventDefault();
+
+									const currentBinds = (() => {
+										const item = localStorage.getItem('binds');
+
+										if (item) {
+											const json = JSON.parse(item);
+
+											return json;
+										}
+
+										return [];
+									})();
+
+									const clickedBind: any = currentBinds[i];
+
+									if (clickedBind) {
+										const { data } = clickedBind;
+
+										shuffle(data);
+
+										let message = data[0];
+
+										const chat_footer: any = document.querySelector('.m-chat-footer');
+
+										if (chat_footer) {
+											const { __vue__: vue } = chat_footer;
+
+											if (vue) {
+												const { $parent, makeSubmitMessage, setText } = vue;
+
+												if (userId) {
+													const int__userId = parseInt(userId);
+
+													if ('object' === typeof $this.users.get(int__userId)) {
+														const user = $this.users.get(int__userId);
+
+														const { displayName } = user;
+
+														if (displayName) {
+															message = message.replace(/\%name/g, displayName);
+														}
+													}
+												}
+
+												const emojis: string[] = [
+													'😊',  // Улыбающееся лицо
+													'😄',  // Широко улыбающееся лицо
+													'😃',  // Радостное лицо
+													'😁',  // Сияющее лицо
+													'🤩',  // Звёздные глаза
+													'🥰',  // Влюблённое лицо
+													'😍',  // Влюблённые глаза
+													'🤗',  // Обнимающее лицо
+													'😘',  // Воздушный поцелуй
+													'😇',  // Лицо с нимбом
+													'😉',  // Подмигивающее лицо
+													'😜',  // Подмигивающее лицо с языком
+													'🥳',  // Лицо с праздничным колпаком
+													'💦',  // Брызги (splash)
+													'😈',
+													'💓',
+													'💌',
+												];
+
+												while (/%emoji/.test(message)) {
+													shuffle(emojis);
+
+													const emoji = emojis[0];
+
+													message = message.replace(/%emoji/, emoji);
+												}
+
+												const hasToBeSent = /%send/.test(message);
+												const hasToBeAnswered = /%answer/.test(message);
+												const hasToBeLiked = /%like/.test(message);
+												const hasToBeClosed = /%close/.test(message);
+
+												message = message.replace(/\%\w+/g, '');
+
+												setText({ text: message });
+
+												if (hasToBeAnswered || hasToBeLiked) {
+													if (userId) {
+														const int__userId = parseInt(userId);
+
+														const messages = <Map<number, any>>await $this.fetchMessages(int__userId);
+
+														const fromUser = [...messages.values()].filter((message: any) => {
+															const { fromUser } = message;
+
+															const { id: userId_ } = fromUser;
+
+															return userId_ == int__userId;
+														});
+
+														fromUser.map((message: any) => {
+															$this.likeMessage(message);
+														});
+
+														const message = fromUser[0];
+
+														if (message) {
+															const { id: messageId } = message;
+
+															$parent.replyToMessageId = messageId;
+														}
+													}
+												}
+
+												if (hasToBeSent) {
+													makeSubmitMessage();
+												}
+											}
+										}
+									}
+
+									return true;
+								};
 							}
 						}
 					}
@@ -613,12 +802,134 @@ async function inject() {
 				observer();
 			});
 		}
+
+		async likeMessage(message) {
+			const $this = this;
+
+			return new Promise(async (resolve, reject) => {
+				const { id: messageId, fromUser, isLiked } = message;
+
+				if (isLiked) {
+					resolve(isLiked);
+
+					return;
+				}
+
+				const { id: userId } = fromUser;
+
+				const BASE_PATH = `/api2/v2/messages/${messageId}/like`;
+
+				const path = `${BASE_PATH}`;
+
+				const response = await queue.add(async () => await OFSign.post(path, {
+					withUserId: userId,
+				}));
+
+				const result = await response.json();
+
+				resolve(result);
+			});
+		}
+
+		async fetchMessages(int__userId: number = 0) {
+			const $this = this;
+
+			return new Promise(async (resolve, reject) => {
+				const BASE_PATH = `/api2/v2/chats/${int__userId}/messages`;
+
+				const PARAMS = `limit=10&order=desc&skip_users=all`;
+
+				const path = `${BASE_PATH}?${PARAMS}`;
+
+				const messages = new Map();
+
+				const response = await queue.add(async () => await OFSign.get(path));
+
+				const data: any = await response.json();
+
+				const { list, hasMore } = data;
+
+				const length = list.length;
+
+				list.map(message => {
+					const { id: messageId } = message;
+
+					messages.set(messageId, message);
+				});
+
+				resolve(messages);
+			});
+		}
+
+		async fetchMessagesExt(int__userId: number = 0) {
+			const $this = this;
+
+			return new Promise((resolve, reject) => {
+				const BASE_PATH = `/api2/v2/chats/${int__userId}/messages`;
+
+				const PARAMS = `order=desc&skip_users=all`;
+
+				const path = `${BASE_PATH}?${PARAMS}`;
+
+				let limit = 10;
+
+				let firstId = 0;
+
+				let count = 0;
+
+				const messages = new Map();
+
+				const observer = async () => {
+					const path_ = `${path}&limit=${limit}${firstId ? `&firstId=${firstId}` : ''}`;
+
+					const response = await queue.add(async () => await OFSign.get(path_));
+
+					const data: any = await response.json();
+
+					const { list, hasMore } = data;
+
+					const length = list.length;
+
+					list.map(message => {
+						const { id: messageId } = message;
+
+						messages.set(messageId, message);
+					});
+
+					count += list.length;
+
+					const message = list.pop();
+
+					const { id: messageId, createdAt } = message;
+
+					const createdAt__date = new Date(createdAt);
+
+					const diff = Math.abs(new Date().getTime() - createdAt__date.getTime());
+
+					const days = diff / (1000 * 60 * 60 * 24);
+
+					if (firstId == messageId || 200 < count || 31 < days || 200 < count) {
+						resolve(messages);
+
+						return;
+					}
+
+					limit = 100;
+
+					firstId = messageId;
+
+					setTimeout(observer, 1000);
+				};
+
+				observer();
+			});
+		}
 	}
 
 	const ofc = new OFCombine();
 }
 
-async function injector() {
+function injector() {
 	const observer = async () => {
 		const tabs = await chrome.tabs.query({
 			url: [
@@ -633,7 +944,10 @@ async function injector() {
 				injectImmediately: true,
 				target: { tabId: tabId, allFrames: false },
 				func: inject,
-				// world: "MAIN"
+				args: [
+					chrome.runtime.getURL('/'),
+				],
+				world: "MAIN"
 			});
 		});
 
@@ -644,3 +958,17 @@ async function injector() {
 }
 
 injector();
+
+chrome.runtime.onInstalled.addListener(() => {
+	chrome.alarms.create("keepAliveAlarm", {
+		periodInMinutes: 1,
+	});
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+	if (alarm.name === "keepAliveAlarm") {
+		console.log("Воркер проснулся в:", new Date().toLocaleTimeString());
+
+		// injector();
+	}
+});

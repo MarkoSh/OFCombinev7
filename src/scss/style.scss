@@ -79,6 +79,55 @@ $spent_500: #BA55D3;
     }
 }
 
+[id="binds"] {
+    padding: 2px;
+    display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-content: center;
+	justify-content: center;
+	align-items: center;
+	gap: 1px;
+
+    .bind {
+        display: block;
+        flex: 1 1 8%;
+	    height: 2em;
+        background: rgba(138, 150, 163, .12);
+	    border-radius: 5px;
+        position: relative;
+
+        &:after {
+            content: '';
+            display: block;
+            width: 1em;
+            height: 1em;
+            background: grey;
+            position: absolute;
+            top: calc(50% - .5em);
+            left: calc(50% - .5em);
+            border-radius: 100%;
+        }
+
+        $colors: (
+            #FF0055, #00FFCC, #FF3300, #9900FF, #FFFF00, #FF0099, // Неон
+            #00E676, #00B0FF, #76FF03, #00E5FF, #1DE9B6, #00E676, // Природа
+            #FF1744, #FF9100, #FFEA00, #D500F9, #651FFF, #2979FF, // Модерн
+            #00F5FF, #FF0066, #7C4DFF, #1A237E, #00BFA5, #FFEA00  // Космос
+        );
+
+        // Цикл @for для генерации классов .item-1, .item-2 и т.д.
+        @for $i from 1 through length($colors) {
+            &.bound:nth-child(#{$i}) {
+                &:after {
+                    content: ""; // Обязательно для отображения псевдоэлемента
+                    background: nth($colors, $i);
+                }
+            }
+        }
+    }
+}
+
 
 .m-mode-dark {
     .badge {
