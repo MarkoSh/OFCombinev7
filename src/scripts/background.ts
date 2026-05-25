@@ -369,21 +369,52 @@ async function inject(extensionRootUrl) {
 
 				const { searchParams } = url;
 
-				const scheduleMessageId = searchParams.get('scheduleMessageId');
+				const observer = () => {
+					const { scheduleQueueMessage } = $this.app.$store.state.chats;
 
-				$this.app.$router.push({
-					name: "ChatsSend",
-					params: {
-						forwardMessageId: scheduleMessageId
+					if (scheduleQueueMessage) {
+						$this.app.$store.state.chats.scheduleQueueMessage = null;
+
+						return;
 					}
-				});
 
-				history.replaceState({}, "", url);
+					setTimeout(observer, 100);
+				};
+
+				observer();
 			}
 
 			const isMassForm = location.pathname.includes('my/chats/send');
 
 			if (isMassForm) {
+				const chats__conversations: any = document.querySelector('.b-chats__conversations');
+
+				if (chats__conversations) {
+					const { __vue__: vue } = chats__conversations;
+
+					const { fetchUsersListsData } = vue;
+
+					const observer = async () => {
+						const { usersListsOffset } = vue;
+
+						if (0 < usersListsOffset) {
+							await fetchUsersListsData();
+
+							const { usersListsHasMore } = vue;
+
+							if (!usersListsHasMore) {
+								showToast('Lists loaded');
+
+								return;
+							}
+						}
+
+						setTimeout(observer, 100);
+					};
+
+					observer();
+				}
+
 				const chat__messages = document.querySelector('.b-chat__messages');
 
 				if (chat__messages) {
@@ -928,6 +959,10 @@ async function inject(extensionRootUrl) {
 			};
 
 			observer();
+
+			setInterval(() => {
+				$this.users = new Map();
+			}, 1 * 60 * 1000);
 		}
 
 		getUsersByIds(users: Map<number, any>) {
