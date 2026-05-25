@@ -672,7 +672,7 @@ async function inject(extensionRootUrl) {
 									<ul>
 										<li class="total-summ">TOTAL: ${totalSumm ? `$${totalSumm}` : 'FREE'}</li>
 										<li>Subscribed at: ${formatter.format(subscribeAt_date)}</li>
-										<li>Last transaction: ${lastTransaction ? formatter.format(lastTransaction) : 'no'}</li>
+										<li>Last transaction: ${lastTransaction ? formatter.format(lastTransaction) : 'not found'}</li>
 										<li>Last read: <span id="last_read_date">...</span></li>
 										<li class="${fromTrial ? 'from-trial-true' : 'from-trial-false'}">From trial: ${fromTrial ? 'yes' : 'no'}</li>
 										<li class="${isRebill ? 'is-rebill-true' : 'is-rebill-false'}">Rebill: ${isRebill ? 'yes' : 'no'}</li>
@@ -773,7 +773,7 @@ async function inject(extensionRootUrl) {
 											const { __vue__: vue } = chat_footer;
 
 											if (vue) {
-												const { $parent, makeSubmitMessage, setText } = vue;
+												const { $parent, makeSubmitMessage, setText, withUserId: userId } = vue;
 
 												if (userId) {
 													const int__userId = parseInt(userId);
@@ -1014,6 +1014,7 @@ async function inject(extensionRootUrl) {
 								const BASE_PATH = `/api2/v2/users/notifications`;
 
 								const types = [
+									'subscribed',
 									'purchases',
 									'tip',
 								];
@@ -1038,10 +1039,20 @@ async function inject(extensionRootUrl) {
 								const results = await Promise.all(proms);
 
 								const lastTransaction = results.filter(result => result).map((transaction: any) => {
-									const { createdAt } = transaction;
+									const { type, replacePairs, createdAt } = transaction;
+
+									const price = replacePairs['{PRICE}'];
+
+									if ('subscribed' == type) {
+										if (price) {
+											return new Date(createdAt);
+										} else {
+											return false;
+										}
+									}
 
 									return new Date(createdAt);
-								}).sort((a: any, b: any) => b - a)[0] ?? false;
+								}).filter((transaction: any) => transaction).sort((a: any, b: any) => b - a)[0] ?? false;
 
 								user.lastTransaction = lastTransaction;
 							}
