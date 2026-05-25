@@ -156,7 +156,31 @@ $spent_500: #BA55D3;
     }
 }
 
+[id="tools__massdm"] {
+    flex: 1 1 100%;
+    align-self: flex-start;
+    padding: 3px;
+    margin: 3px;
+    border-radius: 3px;
 
+    .buttons-group {
+        display: flex;
+        gap: 3px;
+        margin-bottom: 3px;
+
+        button {
+            flex-grow: 1;
+            font-size: 12px;
+            line-height: 12px;
+        }
+
+        &:nth-child(3) {
+            button {
+                flex-basis: 25%;
+            }
+        }
+    }
+}
 
 .m-mode-dark {
     .badge {

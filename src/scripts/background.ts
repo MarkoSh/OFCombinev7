@@ -202,14 +202,17 @@ async function inject(extensionRootUrl) {
 	const OFSign = new OFSignClient();
 
 	class OFCombine {
+		app: any = false;
 		users: Map<number, any> = new Map();
 
-		constructor() {
+		constructor(app) {
 			const $this = this;
 
-			window['OFCombine'] = $this;
+			$this.app = app;
 
 			$this.init();
+
+			showToast('Injected');
 		}
 
 		init() {
@@ -246,108 +249,174 @@ async function inject(extensionRootUrl) {
 			observer();
 		}
 
+		async copyMessage(text) {
+			showToast('Developing');
+
+			return;
+
+			const pre = document.createElement('pre');
+
+			pre.innerHTML = decodeURIComponent(text);
+
+			const textRaw = pre.innerText;
+
+			try {
+				await navigator.clipboard.writeText(textRaw);
+
+				showToast('Copied!');
+			} catch (error) {
+				showToast('Clipboard API failed!');
+			}
+		}
+
+		downloadMedia(target) {
+			const chat_message = target.closest('[at-attr="chat_message"]');
+
+			const { __vue__: vue } = chat_message;
+
+			const { media } = vue;
+
+			let isDrmOn = false;
+
+			const fulls = media.map(item => {
+				const { files } = item;
+
+				const { drm, full } = files;
+
+				if (drm) isDrmOn = true;
+
+				const { url } = full;
+
+				return url;
+			});
+
+			if (isDrmOn) {
+				showToast(`It's under DRM protection`);
+
+				return;
+			}
+
+			const activeIndex = (() => {
+				const el = chat_message.querySelector('.swiper');
+
+				if (el) {
+					const { swiper } = el;
+
+					const { activeIndex } = swiper;
+
+					return activeIndex;
+				}
+
+				return 0;
+			})();
+
+			const a = document.createElement('a');
+
+			a.href = fulls[activeIndex];
+
+			a.target = '_blank';
+
+			a.click();
+		}
+
+		translateMessage(args) {
+			showToast('Developing');
+
+			return;
+		}
+
+		showToast(text) {
+			const app: any = document.querySelector('[id="app"]');
+
+			if (app) {
+				const { __vue__: vue } = app;
+
+				const { showToast } = vue;
+
+				showToast({ text });
+			}
+		}
+
+		replyToMessage(messageId) {
+			const chat_footer: any = document.querySelector('.m-chat-footer');
+
+			if (chat_footer) {
+				const { __vue__: vue } = chat_footer;
+
+				const { $parent } = vue;
+
+				$parent.replyToMessageId = messageId;
+			}
+		}
+
 		handler() {
 			const $this = this;
 
-			window['copyMessage'] = async (text) => {
-				showToast('Developing');
+			window['copyMessage'] = (args) => { $this.copyMessage(args) };
 
-				return;
+			window['downloadMedia'] = (args) => { $this.downloadMedia(args) };
 
-				const pre = document.createElement('pre');
+			window['translateMessage'] = (args) => { $this.translateMessage(args) };
 
-				pre.innerHTML = decodeURIComponent(text);
+			window['showToast'] = (args) => { $this.showToast(args) };
 
-				const textRaw = pre.innerText;
+			window['replyToMessage'] = (args) => { $this.replyToMessage(args) };
 
-				try {
-					await navigator.clipboard.writeText(textRaw);
+			const isForward = '#forward' == location.hash;
 
-					showToast('Copied!');
-				} catch (error) {
-					showToast('Clipboard API failed!');
-				}
-			};
+			if (isForward) {
+				const url = new URL(location.href);
 
-			window['downloadMedia'] = (target) => {
-				const chat_message = target.closest('[at-attr="chat_message"]');
+				const { searchParams } = url;
 
-				const { __vue__: vue } = chat_message;
+				const scheduleMessageId = searchParams.get('scheduleMessageId');
 
-				const { media } = vue;
-
-				let isDrmOn = false;
-
-				const fulls = media.map(item => {
-					const { files } = item;
-
-					const { drm, full } = files;
-
-					if (drm) isDrmOn = true;
-
-					const { url } = full;
-
-					return url;
+				$this.app.$router.push({
+					name: "ChatsSend",
+					params: {
+						forwardMessageId: scheduleMessageId
+					}
 				});
 
-				if (isDrmOn) {
-					showToast(`It's under DRM protection`);
+				history.replaceState({}, "", url);
+			}
 
-					return;
-				}
+			const isMassForm = location.pathname.includes('my/chats/send');
 
-				const activeIndex = (() => {
-					const el = chat_message.querySelector('.swiper');
+			if (isMassForm) {
+				const chat__messages = document.querySelector('.b-chat__messages');
 
-					if (el) {
-						const { swiper } = el;
+				if (chat__messages) {
+					const tools = chat__messages.querySelector('[id="tools__massdm"]');
 
-						const { activeIndex } = swiper;
+					if (!tools) {
+						const tools = document.createElement('div');
 
-						return activeIndex;
+						tools.id = 'tools__massdm';
+
+						chat__messages.appendChild(tools);
+
+						tools.innerHTML = `
+						<div class="buttons-group">
+							<button class="g-btn m-rounded" onclick="includeLists()">Include lists</button>
+							<button class="g-btn m-rounded" onclick="excludeLists()">Exclude lists</button>
+							<button class="g-btn m-rounded onclick="resetLists()"">Reset lists</button>
+						</div>
+						<div class="buttons-group">
+							<button class="g-btn m-rounded" onclick="includeFans()">Include fans</button>
+							<button class="g-btn m-rounded" onclick="excludeFans()">Exclude fans</button>
+							<button class="g-btn m-rounded" onclick="resetFans()">Reset fans</button>
+						</div>
+						<div class="buttons-group">
+							<button class="g-btn m-rounded" onclick="loadLists()">Load lists</button>
+							<button class="g-btn m-rounded" onclick="loadFans()">Load fans</button>
+							<button class="g-btn m-rounded" onclick="loadTmpl()">Load template</button>
+							<button class="g-btn m-rounded" onclick="saveTmpl()">Save template</button>
+						</div>
+						`;
 					}
-
-					return 0;
-				})();
-
-				const a = document.createElement('a');
-
-				a.href = fulls[activeIndex];
-
-				a.target = '_blank';
-
-				a.click();
-			};
-
-			window['translateMessage'] = () => {
-				showToast('Developing');
-
-				return;
-			};
-
-			window['showToast'] = (text) => {
-				const app: any = document.querySelector('[id="app"]');
-
-				if (app) {
-					const { __vue__: vue } = app;
-
-					const { showToast } = vue;
-
-					showToast({ text });
 				}
-			};
-
-			window['replyToMessage'] = (messageId) => {
-				const chat_footer: any = document.querySelector('.m-chat-footer');
-
-				if (chat_footer) {
-					const { __vue__: vue } = chat_footer;
-
-					const { $parent } = vue;
-
-					$parent.replyToMessageId = messageId;
-				}
-			};
+			}
 
 			const observer = async () => {
 				const chats__list = document.querySelector('.b-chats__list-wrapper');
@@ -739,9 +808,7 @@ async function inject(extensionRootUrl) {
 														})();
 
 														const fromUser = [...messages.values()].filter((message: any) => {
-															const { fromUser } = message;
-
-															const { id: userId_ } = fromUser;
+															const { fromUser: userId_ } = message;
 
 															return userId_ == int__userId;
 														});
@@ -755,7 +822,9 @@ async function inject(extensionRootUrl) {
 														if (message) {
 															const { id: messageId } = message;
 
-															$parent.replyToMessageId = messageId;
+															if (!$parent.replyToMessageId) {
+																$parent.replyToMessageId = messageId;
+															}
 														}
 													}
 												}
@@ -802,9 +871,9 @@ async function inject(extensionRootUrl) {
 
 						const { chatId, queueId, text } = message;
 
-						const chat__message__time = chat_message.querySelector(':scope > .b-chat__message__time');
+						const chat__message__content = chat_message.querySelector(':scope > .b-chat__message__content');
 
-						if (chat__message__time) {
+						if (chat__message__content) {
 							const tools = chat_message.querySelector('.message-tools');
 
 							if (!tools) {
@@ -812,7 +881,7 @@ async function inject(extensionRootUrl) {
 
 								tools.classList.add('message-tools');
 
-								chat__message__time.before(tools);
+								chat__message__content.after(tools);
 
 								tools.innerHTML = ``;
 
@@ -1123,7 +1192,23 @@ async function inject(extensionRootUrl) {
 		}
 	}
 
-	const ofc = new OFCombine();
+	const observer = () => {
+		const app: any = document.querySelector('[id="app"]');
+
+		if (app) {
+			const { __vue__: vue } = app;
+
+			if (vue) {
+				window['ofc'] = new OFCombine(vue);
+
+				return;
+			}
+		}
+
+		setTimeout(observer, 100);
+	};
+
+	observer();
 }
 
 async function injector() {
