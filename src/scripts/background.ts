@@ -848,7 +848,7 @@ async function inject(extensionRootUrl) {
 															return messages;
 														})();
 
-														const fromUser = [...messages.values()].filter((message: any) => {
+														const fromUser = [...messages.values()].reverse().filter((message: any) => {
 															const { fromUser: userId_ } = message;
 
 															return userId_ == int__userId;
