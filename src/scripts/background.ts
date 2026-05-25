@@ -736,6 +736,8 @@ async function inject(extensionRootUrl) {
 								bind.onclick = async (e) => {
 									e.preventDefault();
 
+									const { shiftKey } = e;
+
 									const currentBinds = (() => {
 										const item = localStorage.getItem('binds');
 
@@ -749,6 +751,14 @@ async function inject(extensionRootUrl) {
 									})();
 
 									const clickedBind: any = currentBinds[i];
+
+									if (shiftKey || !clickedBind) {
+										const { hint, data } = clickedBind ? clickedBind : { hint: '', data: [] };
+
+										debugger;
+
+										return true;
+									}
 
 									if (clickedBind) {
 										const { data } = clickedBind;
