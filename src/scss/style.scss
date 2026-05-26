@@ -232,6 +232,14 @@ $spent_500: #BA55D3;
             padding-bottom: 10px;
         }
     }
+
+    .markers {
+        margin: 5px;
+        list-style: none;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
 }
 
 @keyframes modalIn {

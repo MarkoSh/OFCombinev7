@@ -801,10 +801,63 @@ async function inject(extensionRootUrl) {
 											return replaced;
 										})();
 
-										const { firstChild } = div;
+										const modal = <HTMLElement>div.firstChild;
 
-										if (firstChild) {
-											document.body.appendChild(firstChild);
+										if (modal) {
+											document.body.appendChild(modal);
+
+											const form = modal.querySelector('form');
+
+											if (form) {
+												form.onsubmit = e => {
+													e.preventDefault();
+
+													const formData = (() => {
+														const formData = new FormData(form);
+
+														const obj: any = Object.fromEntries(formData.entries());
+
+														obj.data = obj.data.split("\n\n");
+
+														return obj
+													})();
+
+													currentBinds[i] = formData;
+
+													const json = JSON.stringify(currentBinds);
+
+													localStorage.setItem('binds', json);
+
+													modal.remove();
+
+													return true;
+												};
+											}
+
+											const markers = <NodeListOf<HTMLElement>>modal.querySelectorAll('.markers a');
+
+											markers.forEach((marker) => {
+												const textContent = marker.textContent.trim();
+
+												marker.onclick = e => {
+													e.preventDefault();
+
+													const textarea = modal.querySelector('textarea');
+
+													if (textarea) {
+														textarea.focus();
+
+														textarea.setRangeText(
+															` ${textContent}`,
+															textarea.selectionStart,
+															textarea.selectionEnd,
+															'end' // Moves cursor to the end of the inserted text
+														);
+													}
+
+													return true;
+												};
+											});
 										}
 
 										return true;

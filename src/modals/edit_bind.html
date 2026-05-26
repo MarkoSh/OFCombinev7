@@ -1,7 +1,7 @@
 <div id="edit_bind" class="combine-modal" style="display: block">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="/" method="post">
+            <form id="edit_bind" action="/" method="post">
                 <header class="modal-header">
                     <h4 class="modal-title">Edit bind</h4>
                 </header>
@@ -15,16 +15,22 @@
                     </fieldset>
                     <fieldset>
                         <div>
-                            <label for="binds_texts">Binds</label>
-                            <textarea id="binds_texts" name="binds_texts" rows="10"
-                                placeholder="Two lines for separate">{TEXTS}</textarea>
+                            <label for="data">Binds</label>
+                            <textarea id="data" name="data" rows="10" required
+                                placeholder="Two lines for separate, markers: %name %emoji %send %answer %like">{TEXTS}</textarea>
+                            <ul class="markers">
+                                <li><a href="#">%name</a></li>
+                                <li><a href="#">%emoji</a></li>
+                                <li><a href="#">%send</a></li>
+                                <li><a href="#">%answer</a></li>
+                                <li><a href="#">%like</a></li>
+                            </ul>
                         </div>
                     </fieldset>
                 </div>
                 <footer class="modal-footer">
-                    <button type="button" class="g-btn m-flat m-btn-gaps m-reset-width"> Cancel </button>
-                    <button type="button" class="g-btn m-flat m-btn-gaps m-reset-width"> Clear </button>
-                    <button type="button" class="g-btn m-flat m-btn-gaps m-reset-width"> Save </button>
+                    <button type="reset" class="g-btn m-flat m-btn-gaps m-reset-width"> Reset </button>
+                    <button type="submit" class="g-btn m-flat m-btn-gaps m-reset-width"> Save </button>
                 </footer>
             </form>
         </div>
