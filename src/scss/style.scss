@@ -257,3 +257,28 @@ $spent_500: #BA55D3;
         background-color: var(--bg-color);
     }
 }
+
+[id="ModalMediaVault"] {
+    @media (min-width: 560px) {
+        .modal-dialog.modal-extra-lg {
+            max-width: 980px;
+        }
+    }
+
+    @media (min-width: 1004px) {
+        .m-modal-view .l-sidebar-column {
+            width: 30%;
+        }
+    }
+
+    @media (min-width: 1004px) {
+        .m-modal-view .l-main-content.m-r-side {
+            max-width: 70%;
+        }
+    }
+
+    .checkbox-item.m-pos-right-top {
+        width: 40px;
+        height: 40px;
+    }
+}
