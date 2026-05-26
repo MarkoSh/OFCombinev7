@@ -245,6 +245,16 @@ async function inject(extensionRootUrl) {
 					$this.modals[modal] = text;
 				}
 			});
+
+			window.addEventListener('click', (e: PointerEvent) => {
+				const { target } = e;
+
+				if (target && target instanceof HTMLElement) {
+					if (target.classList.contains('combine-modal')) {
+						target.remove();
+					}
+				}
+			});
 		}
 
 		applyStyle() {
