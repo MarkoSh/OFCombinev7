@@ -830,6 +830,8 @@ async function inject(extensionRootUrl) {
 
 													modal.remove();
 
+													binds.remove();
+
 													return true;
 												};
 											}
@@ -876,7 +878,7 @@ async function inject(extensionRootUrl) {
 											const { __vue__: vue } = chat_footer;
 
 											if (vue) {
-												const { $parent, makeSubmitMessage, setText, withUserId: userId } = vue;
+												const { $parent, makeSubmitMessage, setText, text: currentText, withUserId: userId } = vue;
 
 												if (userId) {
 													const int__userId = parseInt(userId);
@@ -927,7 +929,7 @@ async function inject(extensionRootUrl) {
 
 												message = message.replace(/\%\w+/g, '');
 
-												setText({ text: message });
+												setText({ text: `${$this.stripTags(currentText)} ${message.trim()}` });
 
 												if (hasToBeAnswered || hasToBeLiked) {
 													if (userId) {
@@ -1076,6 +1078,18 @@ async function inject(extensionRootUrl) {
 			setInterval(() => {
 				$this.users = new Map();
 			}, 1 * 60 * 1000);
+		}
+
+		stripTags(text) {
+			const $this = this;
+
+			const div = document.createElement('div');
+
+			div.innerHTML = text;
+
+			text = div.textContent.trim();
+
+			return text;
 		}
 
 		getUsersByIds(users: Map<number, any>) {
@@ -1370,6 +1384,169 @@ async function inject(extensionRootUrl) {
 	observer();
 }
 
+function tools() {
+	if (window['hasBeenToolsInjected']) return;
+
+	window['hasBeenToolsInjected'] = true;
+
+	console.log('[TOOLS] OFCombine v7');
+
+	window['retryRequests'] = [];
+
+	const observer = () => {
+		const xhr: any = retryRequests.shift();
+
+		if (xhr) {
+			const { requestHeaders, openArgs, sendArgs } = xhr;
+
+			const { method, url, async, user, password } = openArgs;
+
+			xhr.open(method, url, async, user, password);
+
+			Object.keys(requestHeaders).map(header => {
+				const { [header]: value } = requestHeaders;
+
+				xhr.setRequestHeader(header, value);
+			});
+
+			const { body } = sendArgs;
+
+			xhr.send(body);
+		};
+
+		setTimeout(observer, 1000 + Math.round(100 * Math.random()));
+	};
+
+	observer();
+
+	XMLHttpRequest = new Proxy(XMLHttpRequest, {
+		construct(target) {
+			const $this = this;
+
+			const xhr: any = new target();
+
+			((
+				open,
+				setRequestHeader,
+				send,
+			) => {
+				xhr.open = function () {
+					const [method, url, async, user, password] = [...arguments];
+
+					xhr.openArgs = {
+						method,
+						url,
+						async,
+						user,
+						password
+					};
+
+					return open.apply(this, arguments);
+				};
+				xhr.setRequestHeader = function () {
+					const [header, value] = [...arguments];
+
+					if (!xhr.requestHeaders) xhr.requestHeaders = {};
+
+					xhr.requestHeaders[header] = value;
+
+					return setRequestHeader.apply(this, arguments);
+				};
+				xhr.send = function () {
+					const [body] = [...arguments];
+
+					const { onreadystatechange, onloadend } = xhr;
+
+					xhr.sendArgs = {
+						body
+					}
+
+					xhr.onreadystatechange = function () {
+						const [event] = [...arguments];
+
+						const responseHeadersRAW = xhr.getAllResponseHeaders();
+
+						if ('' != responseHeadersRAW) {
+							const responseHeaders = responseHeadersRAW.split("\r\n").filter((row: any) => row).map((row: any) => {
+								const split = row.split(': ');
+								const name = split[0];
+								const value = split[1].trim();
+								const header: any = {};
+
+								header[name] = value;
+								return header;
+							}).reduce((acc: any, next: any) => {
+								return Object.assign(acc, next);
+							});
+
+							xhr.responseHeaders = responseHeaders;
+						}
+
+						if (429 === xhr.status) {
+							// TODO: сделать ретрай
+						}
+
+						if (200 === xhr.status && 4 === xhr.readyState) {
+							const responseJSON = (() => {
+								try {
+									return JSON.parse(xhr.response);
+								} catch (error) {
+									return {};
+								}
+							})();
+
+							const url = new URL(xhr.responseURL);
+
+							xhr.capturedResponse = {
+								responseJSON,
+								url
+							};
+
+							const response = xhr.response;
+							const responseText = xhr.responseText;
+
+							Object.defineProperty(xhr, "response", {
+								writable: true
+							});
+
+							Object.defineProperty(xhr, "responseText", {
+								writable: true
+							});
+
+							xhr.response = response;
+							xhr.responseText = responseText;
+
+							xhr.onloadend = onloadend;
+						}
+
+						return onreadystatechange ? onreadystatechange.apply(this, arguments) : null;
+					};
+
+					xhr.onloadend = function () {
+						const [event] = [...arguments];
+
+						if (429 === xhr.status) {
+							retryRequests.push(xhr);
+
+							return;
+						}
+
+						return onloadend ? onloadend.apply(this, arguments) : null;
+					};
+
+					return send.apply(this, arguments);
+				};
+			})(
+				xhr.open,
+				xhr.setRequestHeader,
+				xhr.send,
+			);
+
+			return xhr;
+		}
+	});
+}
+
 async function injector() {
 	const tabs = await chrome.tabs.query({
 		url: [
@@ -1387,6 +1564,14 @@ async function injector() {
 			args: [
 				chrome.runtime.getURL('/'),
 			],
+			world: "MAIN"
+		});
+
+		chrome.scripting.executeScript({
+			injectImmediately: true,
+			target: { tabId: tabId, allFrames: false },
+			func: tools,
+			args: [],
 			world: "MAIN"
 		});
 	});
