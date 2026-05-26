@@ -205,6 +205,8 @@ async function inject(extensionRootUrl) {
 		app: any = false;
 		users: Map<number, any> = new Map();
 
+		modals: any = {};
+
 		constructor(app) {
 			const $this = this;
 
@@ -218,9 +220,31 @@ async function inject(extensionRootUrl) {
 		init() {
 			const $this = this;
 
+			$this.fetchModals();
+
 			$this.applyStyle();
 
 			$this.handler();
+		}
+
+		fetchModals() {
+			const $this = this;
+
+			const modals = ['edit_bind'];
+
+			modals.map(async (modal) => {
+				const link = `${extensionRootUrl}modals/${modal}.html`;
+
+				const response: any = await fetch(link);
+
+				const { ok, status } = response;
+
+				if (ok) {
+					const text = await response.text();
+
+					$this.modals[modal] = text;
+				}
+			});
 		}
 
 		applyStyle() {
@@ -755,7 +779,23 @@ async function inject(extensionRootUrl) {
 									if (shiftKey || !clickedBind) {
 										const { hint, data } = clickedBind ? clickedBind : { hint: '', data: [] };
 
-										debugger;
+										const div = document.createElement('div');
+
+										div.innerHTML = (() => {
+											const text = $this.modals['edit_bind'];
+
+											let replaced = text.replace(/{HINT}/g, hint);
+
+											replaced = replaced.replace(/{TEXTS}/g, data.join("\n\n"));
+
+											return replaced;
+										})();
+
+										const { firstChild } = div;
+
+										if (firstChild) {
+											document.body.appendChild(firstChild);
+										}
 
 										return true;
 									}

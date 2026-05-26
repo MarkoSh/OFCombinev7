@@ -1,6 +1,7 @@
 {
 	"version": "2.0.0",
-	"tasks": [{
+	"tasks": [
+		{
 			"label": "Build TSC",
 			"type": "shell",
 			"command": "npx",
@@ -33,7 +34,11 @@
 		{
 			"label": "Copy",
 			"type": "shell",
-			"command": "cp -r src/manifest.json build/ && cp -r src/img build/"
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"command": "cp -r src/manifest.json build/ && cp -r src/img build/ && cp -r src/modals build/"
 		},
 		{
 			"label": "Watch TSC",

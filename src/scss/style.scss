@@ -182,6 +182,68 @@ $spent_500: #BA55D3;
     }
 }
 
+.combine-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: none;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    outline: none;
+    z-index: 1050;
+    background-color: rgba(#000, .5);
+
+    label {
+        font-size: 14px;
+        position: relative;
+        top: 16px;
+        left: 12px;
+        background: var(--bg-color);
+        padding: 0 4px;
+        color: #8a96a3;
+    }
+
+    fieldset {
+        margin: -15px 0 5px;
+    }
+
+    .modal-content {
+        width: 80%; /* Could be more or less, depending on screen size */
+        max-width: 460px;
+        animation: modalIn .2s ease-in;
+    }
+
+    .modal-body {
+        input, textarea {
+            box-shadow: inset 0 0 0 1px rgba(138, 150, 163, .25);
+            border-radius: 6px;
+            padding: 0 16px;
+            display: block;
+            width: 100%;
+        }
+
+        input {
+            height: 48px;
+        }
+
+        textarea {
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+    }
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+
 .m-mode-dark {
     .badge {
         background-color: var(--bg-color);

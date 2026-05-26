@@ -1,0 +1,32 @@
+<div id="edit_bind" class="combine-modal" style="display: block">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form action="/" method="post">
+                <header class="modal-header">
+                    <h4 class="modal-title">Edit bind</h4>
+                </header>
+                <div class="modal-body">
+                    <fieldset>
+                        <div>
+                            <label for="hint">Hint</label>
+                            <input type="text" id="hint" name="hint" required placeholder="Hello %name"
+                                autocomplete="off" value="{HINT}">
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <div>
+                            <label for="binds_texts">Binds</label>
+                            <textarea id="binds_texts" name="binds_texts" rows="10"
+                                placeholder="Two lines for separate">{TEXTS}</textarea>
+                        </div>
+                    </fieldset>
+                </div>
+                <footer class="modal-footer">
+                    <button type="button" class="g-btn m-flat m-btn-gaps m-reset-width"> Cancel </button>
+                    <button type="button" class="g-btn m-flat m-btn-gaps m-reset-width"> Clear </button>
+                    <button type="button" class="g-btn m-flat m-btn-gaps m-reset-width"> Save </button>
+                </footer>
+            </form>
+        </div>
+    </div>
+</div>

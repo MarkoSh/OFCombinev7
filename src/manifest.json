@@ -35,7 +35,8 @@
 				"htmls/*",
 				"vendor/*",
 				"scripts/*",
-				"css/*"
+				"css/*",
+				"modals/*"
 			],
 			"matches": [
 				"*://onlyfans.com/*"
