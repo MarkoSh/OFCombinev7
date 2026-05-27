@@ -653,7 +653,7 @@ async function inject(extensionRootUrl) {
 						return;
 					}
 
-					setTimeout(observer, 100);
+					setTimeout(observer, 1000);
 				};
 
 				observer();
