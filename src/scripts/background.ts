@@ -204,7 +204,7 @@ async function inject(extensionRootUrl) {
 	class OFCombine {
 		app: any = false;
 		users: Map<number, any> = new Map();
-		vault: Map<number, any> = new Map();
+		vault: Map<number, Map<number, any>> = new Map();
 
 		modals: any = {};
 
@@ -228,6 +228,8 @@ async function inject(extensionRootUrl) {
 			$this.applyStyle();
 
 			$this.handler();
+
+			$this.vaultHandler();
 		}
 
 		fetchModals() {
@@ -1012,8 +1014,6 @@ async function inject(extensionRootUrl) {
 							onReply
 						} = vue;
 
-						// debugger;
-
 						const { id: userId } = withUser;
 
 						window['toggleLikeMessage'] = toggleLikeMessage;
@@ -1072,44 +1072,71 @@ async function inject(extensionRootUrl) {
 						}
 					});
 
-					const photos__items = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[id="ModalMediaVault"] .l-main-content .b-photos__item');
+					if (userId) {
+						const int__userId = parseInt(userId);
 
-					photos__items.forEach(photos__item => {
-						const { __vue__: vue } = photos__item;
+						if ($this.vault.has(int__userId)) {
+							const vault = $this.vault.get(int__userId);
 
-						const { items } = vue;
+							if (vault) {
+								const photos__items = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[id="ModalMediaVault"] .l-main-content .b-photos__item');
 
-						const tools = photos__item.querySelector('.photos-tools');
+								photos__items.forEach(photos__item => {
+									const { __vue__: vue } = photos__item;
 
-						if (!tools) {
-							const tools = document.createElement('div');
+									const { item } = vue;
 
-							tools.classList.add('photos-tools');
+									const { id: mediaId } = item;
 
-							photos__item.appendChild(tools);
+									if (vault.has(mediaId)) {
+										const media = vault.get(mediaId);
 
-							tools.innerHTML = `
-							<span title="Is sent"></span>
-							<span class="price" title="Price">$100</span>
-							<span title="Is unlocked"></span>
-							<a href="" target="_blank" title="Link to message"></a>
-							<a href="" target="_blank" title="Forward this ppv"></a>
-							<a href="" target="_blank" title="Download this media"></span>
-							`;
+										const { id: mediaId_, messageId, queueId, price, isOpened, files } = media;
 
-							const elms = photos__item.querySelectorAll('*');
+										const { drm, full } = files;
 
-							elms.forEach(el => {
-								el.onclick = e => {
-									e.preventDefault();
+										const { url } = full;
 
-									e.stopPropagation();
+										const tools = photos__item.querySelector('.photos-tools');
 
-									return true;
-								};
-							});
+										if (!tools) {
+											const tools = document.createElement('div');
+
+											tools.classList.add('photos-tools');
+
+											photos__item.appendChild(tools);
+
+											tools.innerHTML = `
+											<span title="Is sent">📨</span>`;
+
+											if (price) {
+												tools.innerHTML += `<span class="price" title="Price">$${price}</span>`;
+											}
+
+											tools.innerHTML += `
+											<span title="Is unlocked">${isOpened ? '✔️' : '❌'}</span>
+											<a href="/my/chats/chat/${int__userId}/?firstId=${messageId}" target="_blank" title="Link to message">🔗</a>
+											<a href="/my/chats/send?scheduleMessageId=${queueId}#forward" target="_blank" title="Forward this ppv">🗯️</a>`;
+
+											if (!drm) {
+												tools.innerHTML += `<a href="${url}" target="_blank" title="Download this media">📥️</span>`;
+											}
+
+											const elms = tools.querySelectorAll('a');
+
+											elms.forEach(el => {
+												el.onclick = e => {
+													e.stopPropagation();
+
+													return true;
+												};
+											});
+										}
+									}
+								});
+							}
 						}
-					});
+					}
 				} else {
 					card?.remove();
 				}
@@ -1122,6 +1149,103 @@ async function inject(extensionRootUrl) {
 			setInterval(() => {
 				$this.users = new Map();
 			}, 1 * 60 * 1000);
+		}
+
+		vaultHandler() {
+			const $this = this;
+
+			const observer = async () => {
+				const isChat = document.querySelector('.m-chat-title .b-username-row');
+
+				if (isChat) {
+					const userId = (() => {
+						const userId = location.pathname.match(/(\d+)/)?.[1] || null;
+
+						if (userId) {
+							const int__userId = parseInt(userId);
+
+							return int__userId;
+						}
+
+						return false;
+					})();
+
+					if (userId && userId == $this.currentChatId) {
+						await $this.fetchChatsUsersMedia(userId);
+					}
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
+		}
+
+		async fetchChatsUsersMedia(userId: number) {
+			const $this = this;
+
+			return new Promise<void>((resolve, reject) => {
+				if (!$this.vault.has(userId)) {
+					$this.vault.set(userId, new Map());
+				}
+
+				const vault = $this.vault.get(userId);
+
+				if (vault) {
+					const BASE_PATH = `/api2/v2/chats/${userId}/media/`;
+
+					const PARAMS = `limit=20&skip_users=all`;
+
+					let last_id = 0;
+
+					const observer = async () => {
+						if (userId != $this.currentChatId) {
+							resolve();
+
+							return;
+						}
+
+						const path = `${BASE_PATH}?${PARAMS}${last_id ? `&last_id=${last_id}` : ''}`;
+
+						const response = await queue.add(async () => await OFSign.get(path));
+
+						const data: any = await response.json();
+
+						const { list, hasMore, nextLastId } = data;
+
+						list.map(message => {
+							const { id: messageId, queueId, isOpened, price, media } = message;
+
+							media.map(media => {
+								const { id: mediaId } = media;
+
+								media.messageId = messageId;
+								media.queueId = queueId;
+								media.price = price;
+								media.isOpened = isOpened;
+
+								debugger;
+
+								if (!vault.has(mediaId)) {
+									vault.set(mediaId, media);
+								}
+							});
+						});
+
+						last_id = nextLastId;
+
+						if (!hasMore) {
+							resolve();
+
+							return;
+						}
+
+						setTimeout(observer, 100);
+					};
+
+					observer();
+				}
+			})
 		}
 
 		stripTags(text) {

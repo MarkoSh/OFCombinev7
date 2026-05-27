@@ -278,7 +278,7 @@ $spent_500: #BA55D3;
                 min-width: 30px;
                 height: 30px;
                 border-radius: 30px;
-                background-color: #2979FF;
+                background-color: #00aff0;
                 box-shadow: 0 3px 6px rgba(0, 0, 0, .16);
             }
         }
@@ -311,4 +311,9 @@ $spent_500: #BA55D3;
 .checkbox-item.m-pos-right-top {
     width: 40px;
     height: 40px;
+}
+
+.vault-media-purchased-icon {
+    bottom: 36px !important;
+    right: 4px !important;
 }
