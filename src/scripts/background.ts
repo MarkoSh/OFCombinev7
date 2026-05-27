@@ -640,20 +640,29 @@ async function inject(extensionRootUrl) {
 			const isForward = '#forward' == location.hash;
 
 			if (isForward) {
-				const url = new URL(location.href);
-
-				const { searchParams } = url;
-
 				const observer = () => {
-					const { scheduleQueueMessage } = $this.app.$store.state.chats;
+					const chat_footer: any = document.querySelector('.m-chat-footer');
 
-					if (scheduleQueueMessage) {
-						$this.app.$store.state.chats.scheduleQueueMessage = null;
+					if (chat_footer) {
+						const { __vue__: vue } = chat_footer;
 
-						return;
+						if (vue) {
+							const { resetForwardMessage, deleteScheduleForItem } = vue;
+
+							resetForwardMessage();
+							deleteScheduleForItem();
+
+							const { scheduleQueueMessage } = $this.app.$store.state.chats;
+
+							if (scheduleQueueMessage) {
+								$this.app.$store.state.chats.scheduleQueueMessage = null;
+
+								return;
+							}
+						}
 					}
 
-					setTimeout(observer, 1000);
+					setTimeout(observer, 100);
 				};
 
 				observer();
