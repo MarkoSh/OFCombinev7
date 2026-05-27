@@ -204,8 +204,11 @@ async function inject(extensionRootUrl) {
 	class OFCombine {
 		app: any = false;
 		users: Map<number, any> = new Map();
+		vault: Map<number, any> = new Map();
 
 		modals: any = {};
+
+		currentChatId = 0;
 
 		constructor(app) {
 			const $this = this;
@@ -547,6 +550,8 @@ async function inject(extensionRootUrl) {
 
 					if (userId) {
 						const int__userId = parseInt(userId);
+
+						$this.currentChatId = int__userId;
 
 						if (!$this.users.has(int__userId)) {
 							$this.users.set(int__userId, false);
@@ -1064,6 +1069,45 @@ async function inject(extensionRootUrl) {
 
 
 							}
+						}
+					});
+
+					const photos__items = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[id="ModalMediaVault"] .l-main-content .b-photos__item');
+
+					photos__items.forEach(photos__item => {
+						const { __vue__: vue } = photos__item;
+
+						const { items } = vue;
+
+						const tools = photos__item.querySelector('.photos-tools');
+
+						if (!tools) {
+							const tools = document.createElement('div');
+
+							tools.classList.add('photos-tools');
+
+							photos__item.appendChild(tools);
+
+							tools.innerHTML = `
+							<span title="Is sent"></span>
+							<span class="price" title="Price">$100</span>
+							<span title="Is unlocked"></span>
+							<a href="" target="_blank" title="Link to message"></a>
+							<a href="" target="_blank" title="Forward this ppv"></a>
+							<a href="" target="_blank" title="Download this media"></span>
+							`;
+
+							const elms = photos__item.querySelectorAll('*');
+
+							elms.forEach(el => {
+								el.onclick = e => {
+									e.preventDefault();
+
+									e.stopPropagation();
+
+									return true;
+								};
+							});
 						}
 					});
 				} else {

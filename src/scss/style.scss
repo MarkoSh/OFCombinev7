@@ -259,6 +259,31 @@ $spent_500: #BA55D3;
 }
 
 [id="ModalMediaVault"] {
+    .l-main-content {
+        .photos-tools {
+            display: flex;
+            justify-content: flex-end;
+            position: relative;
+            margin-top: -30px;
+            z-index: 1000;
+
+            span, a {
+                font-weight: bolder;
+                padding: 0 7px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                margin-left: -5px;
+                min-width: 30px;
+                height: 30px;
+                border-radius: 30px;
+                background-color: #2979FF;
+                box-shadow: 0 3px 6px rgba(0, 0, 0, .16);
+            }
+        }
+    }
+
     @media (min-width: 560px) {
         .modal-dialog.modal-extra-lg {
             max-width: 980px;
@@ -281,4 +306,9 @@ $spent_500: #BA55D3;
         width: 40px;
         height: 40px;
     }
+}
+
+.checkbox-item.m-pos-right-top {
+    width: 40px;
+    height: 40px;
 }
