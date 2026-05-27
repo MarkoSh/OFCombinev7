@@ -285,9 +285,7 @@ async function inject(extensionRootUrl) {
 								const Handsontable = wnd['Handsontable'];
 
 								const hot = new Handsontable(container, {
-									data: [
 
-									],
 									colHeaders: [
 										'id',
 										'canReceiveChatMessage',
@@ -752,7 +750,7 @@ async function inject(extensionRootUrl) {
 							const { subscribedOnData } = user;
 
 							if (subscribedOnData) {
-								const { totalSumm } = subscribedOnData;
+								const { subscribeAt, totalSumm } = subscribedOnData;
 
 								const badge = chats__item.querySelector('.badge');
 
@@ -779,6 +777,24 @@ async function inject(extensionRootUrl) {
 
 									if (500 < totalSumm) {
 										badge.classList.add('spent-500');
+									}
+								}
+
+								const subscribeAt_date = new Date(subscribeAt);
+
+								const diff = (new Date().getTime() - subscribeAt_date.getTime()) / 1000 / 60 / 60 / 24;
+
+								if (24 > diff) {
+									const recent = chats__item.querySelector('.recent');
+
+									if (!recent) {
+										const recent = document.createElement('div');
+
+										recent.classList.add('recent');
+
+										chats__item.appendChild(recent);
+
+										recent.innerHTML = `24h`;
 									}
 								}
 							}
@@ -1417,6 +1433,10 @@ async function inject(extensionRootUrl) {
 
 					if (userId && userId == $this.currentChatId) {
 						await $this.fetchChatsUsersMedia(userId);
+
+						setTimeout(observer, 1 * 60 * 1000);
+
+						return;
 					}
 				}
 
