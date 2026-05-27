@@ -193,6 +193,16 @@ async function inject(extensionRootUrl) {
 			});
 		}
 
+		async put<T>(path: string, body: T): Promise<Response> {
+			return this.fetch(path, {
+				method: 'PUT',
+				headers: {
+					'content-type': 'application/json'
+				},
+				body: JSON.stringify(body)
+			});
+		}
+
 		async json<T = unknown>(path: string): Promise<T> {
 			const resp = await this.get(path);
 			return resp.json();
@@ -230,6 +240,232 @@ async function inject(extensionRootUrl) {
 			$this.handler();
 
 			$this.vaultHandler();
+
+			$this.chatsUsersTable();
+		}
+
+		chatsUsersTable() {
+			const $this = this;
+
+			const btns_group = document.querySelector('.b-btns-group.m-move-right');
+
+			if (btns_group) {
+				const btn = btns_group.querySelector('[href="/my/chats/send"]');
+
+				if (btn) {
+					const btn_export = <HTMLAnchorElement>btn.cloneNode(true);
+
+					btn_export.href = '#';
+
+					btn_export.setAttribute('aria-label', 'Export priority inbox');
+
+					btn_export.innerHTML = btn_export.innerHTML.replaceAll('icon-add', 'icon-download');
+
+					btns_group.appendChild(btn_export);
+
+					btn_export.onclick = e => {
+						e.preventDefault();
+
+						const wnd = window.open('about:blank#inbox');
+
+						if (wnd) {
+							const document = wnd.document;
+
+							document.title = 'Inbox';
+
+							const script = <HTMLScriptElement>document.createElement('script');
+
+							script.type = 'text/javascript';
+
+							script.src = 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
+
+							document.head.appendChild(script);
+
+							script.onload = async (e) => {
+								const Handsontable = wnd['Handsontable'];
+
+								const hot = new Handsontable(container, {
+									data: [
+
+									],
+									colHeaders: [
+										'id',
+										'canReceiveChatMessage',
+										'suggestedName',
+										'displayName',
+										'name',
+										'username',
+										'notice',
+										'profileLink',
+										'subscribeAt',
+										'lastSeen',
+										'totalSum',
+										'expired',
+										'chatLink',
+										'isRealPerformer',
+									],
+									columnSorting: true,
+									filters: true,
+									dropdownMenu: true,
+									rowHeaders: true,
+									height: 'auto',
+									autoWrapRow: true,
+									autoWrapCol: true,
+									licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
+								});
+
+								hot.addHook('afterChange', (rows, amount) => {
+									if (rows) {
+										rows.map(row => {
+											const [rowNum, _, __, value] = row;
+
+											const data = hot.getDataAtRow(rowNum);
+
+											const userId = data[0];
+											const displayName = data[3];
+
+											$this.setName(userId, displayName);
+										});
+									}
+								});
+
+								let offset = 0;
+
+								const observer = async () => {
+									const chats = await $this.fetchChats(offset);
+
+									const { list, hasMore } = chats;
+
+									const users = new Map();
+
+									list.map(chat => {
+										users.set(chat.withUser.id, false);
+									});
+
+									await $this.getUsersByIds(users);
+
+									const current = hot.getData();
+
+									const data = current.concat([...users.values()].map(user => {
+										const {
+											id: userId,
+											canReceiveChatMessage,
+											displayName,
+											name,
+											username,
+											notice,
+											lastSeen,
+											subscribedOnExpiredNow,
+											isRealPerformer,
+											subscribedOnData,
+										} = user;
+
+										const suggestedName = $this.getCleanName(displayName || name || username || "");
+
+										const profileLink = `https://onlyfans.com/${username}`;
+										const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+
+										const [subscribeAt, totalSumm] = (() => {
+											if (subscribedOnData) {
+												const { subscribeAt, totalSumm } = subscribedOnData;
+
+												return [subscribeAt, totalSumm]
+											}
+
+											return [];
+										})();
+
+										return [
+											userId,
+											canReceiveChatMessage,
+											suggestedName,
+											displayName,
+											name,
+											username,
+											notice,
+											profileLink,
+											subscribeAt,
+											lastSeen,
+											totalSumm,
+											subscribedOnExpiredNow,
+											chatLink,
+											isRealPerformer,
+										];
+									}));
+
+									hot.updateData(data);
+
+									offset += 10;
+
+									if (!hasMore) {
+										wnd.alert('List loaded');
+
+										return;
+									}
+
+									setTimeout(observer, 100);
+								};
+
+								observer();
+							};
+
+							const container = document.createElement('div');
+
+							container.id = 'container';
+
+							document.body.appendChild(container);
+						}
+
+						return true;
+					};
+				}
+			}
+		}
+
+		setName(userId: string, displayName: string) {
+			const $this = this;
+
+			return new Promise(async (resolve, reject) => {
+				const BASE_PATH = `/api2/v2/subscriptions/${userId}`;
+
+				const path = `${BASE_PATH}`;
+
+				const response = await queue.add(async () => await OFSign.put(path, {
+					displayName,
+				}));
+
+				const result = await response.json();
+
+				resolve(result);
+			})
+		}
+
+		/**
+		 * Извлекает имя из строки, очищает его и нормализует.
+		 * 
+		 * @param {string} input - Входная строка (например, "Jérôme-123 Smith")
+		 * @returns {string} - Отформатированное имя (например, "Jerome")
+		 */
+		getCleanName(input) {
+			if (!input || typeof input !== 'string') return '';
+
+			// 1. Убираем пробелы по краям, берем первое слово
+			// 2. normalize("NFD") разделяет буквы и их акценты (например, 'é' -> 'e' + '´')
+			// 3. replace(/[\u0300-\u036f]/g, "") удаляет эти самые "висящие" акценты
+			let name = input
+				.trim()
+				.split(/\s+/)[0]
+				.normalize("NFD")
+				.replace(/[\u0300-\u036f]/g, "");
+
+			// 4. Очищаем от цифр и любых символов, которые не являются латинскими буквами
+			// Оставляем только A-Z и a-z
+			name = name.replace(/[^a-zA-Z]/g, '');
+
+			if (!name) return '';
+
+			// 5. Делаем первую букву заглавной, остальные строчными
+			return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 		}
 
 		fetchModals() {
@@ -1181,7 +1417,7 @@ async function inject(extensionRootUrl) {
 			observer();
 		}
 
-		async fetchChatsUsersMedia(userId: number) {
+		fetchChatsUsersMedia(userId: number) {
 			const $this = this;
 
 			return new Promise<void>((resolve, reject) => {
@@ -1223,8 +1459,6 @@ async function inject(extensionRootUrl) {
 								media.queueId = queueId;
 								media.price = price;
 								media.isOpened = isOpened;
-
-								debugger;
 
 								if (!vault.has(mediaId)) {
 									vault.set(mediaId, media);
@@ -1285,7 +1519,9 @@ async function inject(extensionRootUrl) {
 
 					const data: any = await response.json();
 
-					Object.keys(data).map(async (userId: string) => {
+					for (let i = 0; i < Object.keys(data).length; i++) {
+						const userId = Object.keys(data)[i];
+
 						const int__userId = parseInt(userId);
 
 						const user = data[int__userId];
@@ -1344,7 +1580,7 @@ async function inject(extensionRootUrl) {
 						}
 
 						users.set(int__userId, user);
-					});
+					}
 				}
 
 				resolve(users);
