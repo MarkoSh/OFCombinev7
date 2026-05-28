@@ -239,6 +239,8 @@ async function inject(extensionRootUrl) {
 
 			$this.handler();
 
+			$this.notoficationsHandler();
+
 			$this.massDMPageHandler();
 
 			$this.forwardHandler();
@@ -250,6 +252,50 @@ async function inject(extensionRootUrl) {
 			$this.chatsUsersTable();
 
 			$this.chatFooterHandler();
+		}
+
+		notoficationsHandler() {
+			const $this = this;
+
+			const observer = () => {
+				const notifications__list = document.querySelector('.b-notifications__list');
+
+				if (notifications__list) {
+					const notification_items = notifications__list.querySelectorAll('[at-attr="notification_item"]');
+
+					notification_items.forEach((notification_item: any) => {
+						const { __vue__: vue } = notification_item;
+
+						const { id: notificationId, user } = vue;
+
+						const { id: userId } = user;
+
+						const fast_message_chat = notification_item.querySelector('.fast-message-chat');
+
+						if (!fast_message_chat) {
+							const fast_message_chat = document.createElement('button');
+
+							fast_message_chat.setAttribute('class', 'g-btn m-with-round-hover m-icon m-icon-only m-gray m-sm-size attach_file has-tooltip');
+
+							fast_message_chat.classList.add('fast-message-chat');
+
+							fast_message_chat.innerHTML = '💬';
+
+							fast_message_chat.title = 'Fast message';
+
+							notification_item.appendChild(fast_message_chat);
+
+							fast_message_chat.onclick = e => {
+
+							};
+						}
+					});
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
 		}
 
 		chatFooterHandler() {
