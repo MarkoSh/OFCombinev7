@@ -1578,6 +1578,20 @@ async function inject(extensionRootUrl) {
 
 						return;
 					}
+				} else {
+					const { vault } = $this.app.$store.state.mediaVault;
+
+					Object.values(vault).map((media: any) => {
+						const { id: mediaId, files } = media;
+
+						const { drm, full } = files;
+
+						const { url } = full;
+
+						if (!drm) {
+							// debugger;
+						}
+					});
 				}
 
 				setTimeout(observer, 100);
