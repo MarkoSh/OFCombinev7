@@ -239,7 +239,11 @@ async function inject(extensionRootUrl) {
 
 			$this.handler();
 
-			$this.vaultHandler();
+			$this.forwardHandler();
+
+			$this.chatsHandler();
+
+			$this.chatHandler();
 
 			$this.chatsUsersTable();
 		}
@@ -247,177 +251,188 @@ async function inject(extensionRootUrl) {
 		chatsUsersTable() {
 			const $this = this;
 
-			const btns_group = document.querySelector('.b-btns-group.m-move-right');
+			const observer = () => {
+				const btns_group = document.querySelector('.b-btns-group.m-move-right');
 
-			if (btns_group) {
-				const btn = btns_group.querySelector('[href="/my/chats/send"]');
+				if (btns_group) {
+					const btn_export = btns_group.querySelector('[id="export"]');
 
-				if (btn) {
-					const btn_export = <HTMLAnchorElement>btn.cloneNode(true);
+					if (!btn_export) {
+						const btn = btns_group.querySelector('[href="/my/chats/send"]');
 
-					btn_export.href = '#';
+						if (btn) {
+							const btn_export = <HTMLAnchorElement>btn.cloneNode(true);
 
-					btn_export.setAttribute('aria-label', 'Export priority inbox');
+							btn_export.href = '#';
 
-					btn_export.innerHTML = btn_export.innerHTML.replaceAll('icon-add', 'icon-download');
+							btn_export.id = 'export';
 
-					btns_group.appendChild(btn_export);
+							btn_export.setAttribute('aria-label', 'Export priority inbox');
 
-					btn_export.onclick = e => {
-						e.preventDefault();
+							btn_export.innerHTML = btn_export.innerHTML.replaceAll('icon-add', 'icon-download');
 
-						const wnd = window.open('about:blank#inbox');
+							btns_group.appendChild(btn_export);
 
-						if (wnd) {
-							const document = wnd.document;
+							btn_export.onclick = e => {
+								e.preventDefault();
 
-							document.title = 'Inbox';
+								const wnd = window.open('about:blank#inbox');
 
-							const script = <HTMLScriptElement>document.createElement('script');
+								if (wnd) {
+									const document = wnd.document;
 
-							script.type = 'text/javascript';
+									document.title = 'Inbox';
 
-							script.src = 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
+									const script = <HTMLScriptElement>document.createElement('script');
 
-							document.head.appendChild(script);
+									script.type = 'text/javascript';
 
-							script.onload = async (e) => {
-								const Handsontable = wnd['Handsontable'];
+									script.src = 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
 
-								const hot = new Handsontable(container, {
+									document.head.appendChild(script);
 
-									colHeaders: [
-										'id',
-										'canReceiveChatMessage',
-										'suggestedName',
-										'displayName',
-										'name',
-										'username',
-										'notice',
-										'profileLink',
-										'subscribeAt',
-										'lastSeen',
-										'totalSum',
-										'expired',
-										'chatLink',
-										'isRealPerformer',
-									],
-									columnSorting: true,
-									filters: true,
-									dropdownMenu: true,
-									rowHeaders: true,
-									height: 'auto',
-									autoWrapRow: true,
-									autoWrapCol: true,
-									licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
-								});
+									script.onload = async (e) => {
+										const Handsontable = wnd['Handsontable'];
 
-								hot.addHook('afterChange', (rows, amount) => {
-									if (rows) {
-										rows.map(row => {
-											const [rowNum, _, __, value] = row;
-
-											const data = hot.getDataAtRow(rowNum);
-
-											const userId = data[0];
-											const displayName = data[3];
-
-											$this.setName(userId, displayName);
+										const hot = new Handsontable(container, {
+											data: [],
+											colHeaders: [
+												'id',
+												'canReceiveChatMessage',
+												'suggestedName',
+												'displayName',
+												'name',
+												'username',
+												'notice',
+												'profileLink',
+												'subscribeAt',
+												'lastSeen',
+												'totalSum',
+												'expired',
+												'chatLink',
+												'isRealPerformer',
+											],
+											columnSorting: true,
+											filters: true,
+											dropdownMenu: true,
+											rowHeaders: true,
+											height: 'auto',
+											autoWrapRow: true,
+											autoWrapCol: true,
+											licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
 										});
-									}
-								});
 
-								let offset = 0;
+										hot.addHook('afterChange', (rows, amount) => {
+											if (rows) {
+												rows.map(row => {
+													const [rowNum, _, __, value] = row;
 
-								const observer = async () => {
-									const chats = await $this.fetchChats(offset);
+													const data = hot.getDataAtRow(rowNum);
 
-									const { list, hasMore } = chats;
+													const userId = data[0];
+													const displayName = data[3];
 
-									const users = new Map();
+													$this.setName(userId, displayName);
+												});
+											}
+										});
 
-									list.map(chat => {
-										users.set(chat.withUser.id, false);
-									});
+										let offset = 0;
 
-									await $this.getUsersByIds(users);
+										const observer = async () => {
+											const chats = await $this.fetchChats(offset);
 
-									const current = hot.getData();
+											const { list, hasMore } = chats;
 
-									const data = current.concat([...users.values()].map(user => {
-										const {
-											id: userId,
-											canReceiveChatMessage,
-											displayName,
-											name,
-											username,
-											notice,
-											lastSeen,
-											subscribedOnExpiredNow,
-											isRealPerformer,
-											subscribedOnData,
-										} = user;
+											const users = new Map();
 
-										const suggestedName = $this.getCleanName(displayName || name || username || "");
+											list.map(chat => {
+												users.set(chat.withUser.id, false);
+											});
 
-										const profileLink = `https://onlyfans.com/${username}`;
-										const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+											await $this.getUsersByIds(users, true);
 
-										const [subscribeAt, totalSumm] = (() => {
-											if (subscribedOnData) {
-												const { subscribeAt, totalSumm } = subscribedOnData;
+											const current = hot.getData();
 
-												return [subscribeAt, totalSumm]
+											const data = current.concat([...users.values()].map(user => {
+												const {
+													id: userId,
+													canReceiveChatMessage,
+													displayName,
+													name,
+													username,
+													notice,
+													lastSeen,
+													subscribedOnExpiredNow,
+													isRealPerformer,
+													subscribedOnData,
+												} = user;
+
+												const suggestedName = $this.getCleanName(displayName || name || username || "");
+
+												const profileLink = `https://onlyfans.com/${username}`;
+												const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+
+												const [subscribeAt, totalSumm] = (() => {
+													if (subscribedOnData) {
+														const { subscribeAt, totalSumm } = subscribedOnData;
+
+														return [subscribeAt, totalSumm]
+													}
+
+													return [];
+												})();
+
+												return [
+													userId,
+													canReceiveChatMessage,
+													suggestedName,
+													displayName,
+													name,
+													username,
+													notice,
+													profileLink,
+													subscribeAt,
+													lastSeen,
+													totalSumm,
+													subscribedOnExpiredNow,
+													chatLink,
+													isRealPerformer,
+												];
+											}));
+
+											hot.updateData(data);
+
+											offset += 10;
+
+											if (!hasMore) {
+												wnd.alert('List loaded');
+
+												return;
 											}
 
-											return [];
-										})();
+											setTimeout(observer, 100);
+										};
 
-										return [
-											userId,
-											canReceiveChatMessage,
-											suggestedName,
-											displayName,
-											name,
-											username,
-											notice,
-											profileLink,
-											subscribeAt,
-											lastSeen,
-											totalSumm,
-											subscribedOnExpiredNow,
-											chatLink,
-											isRealPerformer,
-										];
-									}));
+										observer();
+									};
 
-									hot.updateData(data);
+									const container = document.createElement('div');
 
-									offset += 10;
+									container.id = 'container';
 
-									if (!hasMore) {
-										wnd.alert('List loaded');
+									document.body.appendChild(container);
+								}
 
-										return;
-									}
-
-									setTimeout(observer, 100);
-								};
-
-								observer();
+								return true;
 							};
-
-							const container = document.createElement('div');
-
-							container.id = 'container';
-
-							document.body.appendChild(container);
 						}
-
-						return true;
-					};
+					}
 				}
-			}
+				setTimeout(observer, 100);
+			};
+
+			observer();
 		}
 
 		setName(userId: string, displayName: string) {
@@ -635,37 +650,6 @@ async function inject(extensionRootUrl) {
 
 			window['replyToMessage'] = (args) => { $this.replyToMessage(args) };
 
-			const isForward = '#forward' == location.hash;
-
-			if (isForward) {
-				const observer = () => {
-					const chat_footer: any = document.querySelector('.m-chat-footer');
-
-					if (chat_footer) {
-						const { __vue__: vue } = chat_footer;
-
-						if (vue) {
-							const { resetForwardMessage, deleteScheduleForItem } = vue;
-
-							resetForwardMessage();
-							deleteScheduleForItem();
-
-							const { scheduleQueueMessage } = $this.app.$store.state.chats;
-
-							if (scheduleQueueMessage) {
-								$this.app.$store.state.chats.scheduleQueueMessage = null;
-
-								return;
-							}
-						}
-					}
-
-					setTimeout(observer, 100);
-				};
-
-				observer();
-			}
-
 			const isMassForm = location.pathname.includes('my/chats/send');
 
 			if (isMassForm) {
@@ -725,90 +709,17 @@ async function inject(extensionRootUrl) {
 							<button class="g-btn m-rounded" onclick="loadFans()">Load fans</button>
 							<button class="g-btn m-rounded" onclick="loadTmpl()">Load template</button>
 							<button class="g-btn m-rounded" onclick="saveTmpl()">Save template</button>
-						</div>
-						`;
+						</div>`;
 					}
 				}
 			}
 
 			const observer = async () => {
-				const chats__list = document.querySelector('.b-chats__list-wrapper');
-
-				if (chats__list) {
-					const chats__items = <NodeListOf<HTMLElement>>chats__list.querySelectorAll('.b-chats__item');
-
-					chats__items.forEach(chats__item => {
-						const { id: userId } = chats__item;
-
-						const int__userId = parseInt(userId);
-
-						if (!$this.users.has(int__userId)) {
-							$this.users.set(int__userId, false);
-						} else if ('object' === typeof $this.users.get(int__userId)) {
-							const user = $this.users.get(int__userId);
-
-							const { subscribedOnData } = user;
-
-							if (subscribedOnData) {
-								const { subscribeAt, totalSumm } = subscribedOnData;
-
-								const badge = chats__item.querySelector('.badge');
-
-								if (!badge) {
-									const badge = document.createElement('div');
-
-									badge.classList.add('badge');
-
-									chats__item.appendChild(badge);
-
-									badge.textContent = 0 < totalSumm ? `$${totalSumm}` : 'Free';
-
-									if (0 < totalSumm && 49.99 > totalSumm) {
-										badge.classList.add('spent-1-49');
-									}
-
-									if (50 < totalSumm && 99.99 > totalSumm) {
-										badge.classList.add('spent-50-99');
-									}
-
-									if (100 < totalSumm && 499.99 > totalSumm) {
-										badge.classList.add('spent-100-499');
-									}
-
-									if (500 < totalSumm) {
-										badge.classList.add('spent-500');
-									}
-								}
-
-								const subscribeAt_date = new Date(subscribeAt);
-
-								const diff = (new Date().getTime() - subscribeAt_date.getTime()) / 1000 / 60 / 60 / 24;
-
-								if (24 > diff) {
-									const recent = chats__item.querySelector('.recent');
-
-									if (!recent) {
-										const recent = document.createElement('div');
-
-										recent.classList.add('recent');
-
-										chats__item.appendChild(recent);
-
-										recent.innerHTML = `24h`;
-									}
-								}
-							}
-						}
-					});
-
-					$this.getUsersByIds($this.users);
-				}
-
 				const card = <HTMLElement>document.querySelector('[id="card"]');
 
-				const isChat = document.querySelector('.m-chat-title .b-username-row');
+				const { isChatPage } = $this.app;
 
-				if (isChat) {
+				if (isChatPage) {
 					const userId = location.pathname.match(/(\d+)/)?.[1] || null;
 
 					if (userId) {
@@ -992,270 +903,6 @@ async function inject(extensionRootUrl) {
 						}
 					}
 
-					const binds = document.querySelector('[id="binds"]');
-
-					if (!binds) {
-						const chat__messages = document.querySelector('.b-chat__messages');
-
-						if (chat__messages) {
-							const binds = document.createElement('div');
-
-							binds.id = 'binds';
-
-							chat__messages.after(binds);
-
-							for (let i = 0; i < 24; i++) {
-								const bind = document.createElement('a');
-
-								bind.classList.add('bind');
-
-								bind.href = '#'
-
-								binds.appendChild(bind);
-
-								const currentBinds = (() => {
-									const item = localStorage.getItem('binds');
-
-									if (item) {
-										const json = JSON.parse(item);
-
-										return json;
-									}
-
-									return [];
-								})();
-
-								const clickedBind: any = currentBinds[i];
-
-								if (clickedBind) {
-									const { hint } = clickedBind;
-
-									bind.title = hint;
-
-									bind.classList.add('bound');
-								}
-
-								bind.onclick = async (e) => {
-									e.preventDefault();
-
-									const { shiftKey } = e;
-
-									const currentBinds = (() => {
-										const item = localStorage.getItem('binds');
-
-										if (item) {
-											const json = JSON.parse(item);
-
-											return json;
-										}
-
-										return [];
-									})();
-
-									const clickedBind: any = currentBinds[i];
-
-									if (shiftKey || !clickedBind) {
-										const { hint, data } = clickedBind ? clickedBind : { hint: '', data: [] };
-
-										const div = document.createElement('div');
-
-										div.innerHTML = (() => {
-											const text = $this.modals['edit_bind'];
-
-											let replaced = text.replace(/{HINT}/g, hint);
-
-											replaced = replaced.replace(/{TEXTS}/g, data.join("\n\n"));
-
-											return replaced;
-										})();
-
-										const modal = <HTMLElement>div.firstChild;
-
-										if (modal) {
-											document.body.appendChild(modal);
-
-											const form = modal.querySelector('form');
-
-											if (form) {
-												form.onsubmit = e => {
-													e.preventDefault();
-
-													const formData = (() => {
-														const formData = new FormData(form);
-
-														const obj: any = Object.fromEntries(formData.entries());
-
-														obj.data = obj.data.split("\n\n");
-
-														return obj
-													})();
-
-													currentBinds[i] = formData;
-
-													const json = JSON.stringify(currentBinds);
-
-													localStorage.setItem('binds', json);
-
-													modal.remove();
-
-													binds.remove();
-
-													return true;
-												};
-											}
-
-											const markers = <NodeListOf<HTMLElement>>modal.querySelectorAll('.markers a');
-
-											markers.forEach((marker) => {
-												const textContent = marker.textContent.trim();
-
-												marker.onclick = e => {
-													e.preventDefault();
-
-													const textarea = modal.querySelector('textarea');
-
-													if (textarea) {
-														textarea.focus();
-
-														textarea.setRangeText(
-															` ${textContent}`,
-															textarea.selectionStart,
-															textarea.selectionEnd,
-															'end' // Moves cursor to the end of the inserted text
-														);
-													}
-
-													return true;
-												};
-											});
-										}
-
-										return true;
-									}
-
-									if (clickedBind) {
-										const { data } = clickedBind;
-
-										shuffle(data);
-
-										let message = data[0];
-
-										const chat_footer: any = document.querySelector('.m-chat-footer');
-
-										if (chat_footer) {
-											const { __vue__: vue } = chat_footer;
-
-											if (vue) {
-												const { $parent, makeSubmitMessage, setText, text: currentText, withUserId: userId } = vue;
-
-												if (userId) {
-													const int__userId = parseInt(userId);
-
-													if ('object' === typeof $this.users.get(int__userId)) {
-														const user = $this.users.get(int__userId);
-
-														const { displayName } = user;
-
-														if (displayName) {
-															message = message.replace(/\%name/g, displayName);
-														}
-													}
-												}
-
-												const emojis: string[] = [
-													'😊',  // Улыбающееся лицо
-													'😄',  // Широко улыбающееся лицо
-													'😃',  // Радостное лицо
-													'😁',  // Сияющее лицо
-													'🤩',  // Звёздные глаза
-													'🥰',  // Влюблённое лицо
-													'😍',  // Влюблённые глаза
-													'🤗',  // Обнимающее лицо
-													'😘',  // Воздушный поцелуй
-													'😇',  // Лицо с нимбом
-													'😉',  // Подмигивающее лицо
-													'😜',  // Подмигивающее лицо с языком
-													'🥳',  // Лицо с праздничным колпаком
-													'💦',  // Брызги (splash)
-													'😈',
-													'💓',
-													'💌',
-												];
-
-												while (/%emoji/.test(message)) {
-													shuffle(emojis);
-
-													const emoji = emojis[0];
-
-													message = message.replace(/%emoji/, emoji);
-												}
-
-												const hasToBeSent = /%send/.test(message);
-												const hasToBeAnswered = /%answer/.test(message);
-												const hasToBeLiked = /%like/.test(message);
-												const hasToBeClosed = /%close/.test(message);
-
-												message = message.replace(/\%\w+/g, '');
-
-												setText({ text: `${$this.stripTags(currentText)} ${message.trim()}` });
-
-												if (hasToBeAnswered || hasToBeLiked) {
-													if (userId) {
-														const int__userId = parseInt(userId);
-
-														const messages: Map<number, any> = (() => {
-															const chat_messages = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[at-attr="chat_message"]');
-
-															const messages = new Map();
-
-															chat_messages.forEach(chat_message => {
-																const { __vue__: vue } = chat_message;
-
-																const { message } = vue;
-
-																const { id: messageId } = message;
-
-																messages.set(messageId, message);
-															});
-
-															return messages;
-														})();
-
-														const fromUser = [...messages.values()].reverse().filter((message: any) => {
-															const { fromUser: userId_ } = message;
-
-															return userId_ == int__userId;
-														});
-
-														fromUser.map((message: any) => {
-															$this.likeMessage(message);
-														});
-
-														const message = fromUser[0];
-
-														if (message) {
-															const { id: messageId } = message;
-
-															if (!$parent.replyToMessageId) {
-																$parent.replyToMessageId = messageId;
-															}
-														}
-													}
-												}
-
-												if (hasToBeSent) {
-													makeSubmitMessage();
-												}
-											}
-										}
-									}
-
-									return true;
-								};
-							}
-						}
-					}
-
 					const chat_messages = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[at-attr="chat_message"]');
 
 					chat_messages.forEach(chat_message => {
@@ -1412,24 +1059,419 @@ async function inject(extensionRootUrl) {
 			}, 1 * 60 * 1000);
 		}
 
+		forwardHandler() {
+			const $this = this;
+
+			const observer = () => {
+				const isForward = '#forward' == location.hash;
+
+				if (isForward) {
+					const chat_footer: any = document.querySelector('.m-chat-footer');
+
+					if (chat_footer) {
+						const { __vue__: vue } = chat_footer;
+
+						if (vue) {
+							const { resetForwardMessage, deleteScheduleForItem } = vue;
+
+							resetForwardMessage();
+							deleteScheduleForItem();
+
+							const { scheduleQueueMessage } = $this.app.$store.state.chats;
+
+							if (scheduleQueueMessage) {
+								$this.app.$store.state.chats.scheduleQueueMessage = null;
+
+								return;
+							}
+						}
+					}
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
+		}
+
+		chatsHandler() {
+			const $this = this;
+
+			const observer = () => {
+				const chats__list = document.querySelector('.b-chats__list-wrapper');
+
+				if (chats__list) {
+					const chats__items = <NodeListOf<HTMLElement>>chats__list.querySelectorAll('.b-chats__item');
+
+					chats__items.forEach(chats__item => {
+						const { id: userId } = chats__item;
+
+						const int__userId = parseInt(userId);
+
+						if (!$this.users.has(int__userId)) {
+							$this.users.set(int__userId, false);
+						} else if ('object' === typeof $this.users.get(int__userId)) {
+							const user = $this.users.get(int__userId);
+
+							const { subscribedOnData } = user;
+
+							if (subscribedOnData) {
+								const { subscribeAt, totalSumm } = subscribedOnData;
+
+								const badge = chats__item.querySelector('.badge');
+
+								if (!badge) {
+									const badge = document.createElement('div');
+
+									badge.classList.add('badge');
+
+									chats__item.appendChild(badge);
+
+									badge.textContent = 0 < totalSumm ? `$${totalSumm}` : 'Free';
+
+									if (0 < totalSumm && 49.99 > totalSumm) {
+										badge.classList.add('spent-1-49');
+									}
+
+									if (50 < totalSumm && 99.99 > totalSumm) {
+										badge.classList.add('spent-50-99');
+									}
+
+									if (100 < totalSumm && 499.99 > totalSumm) {
+										badge.classList.add('spent-100-499');
+									}
+
+									if (500 < totalSumm) {
+										badge.classList.add('spent-500');
+									}
+								}
+
+								const subscribeAt_date = new Date(subscribeAt);
+
+								const diff = (new Date().getTime() - subscribeAt_date.getTime()) / 1000 / 60 / 60 / 24;
+
+								if (24 > diff) {
+									const recent = chats__item.querySelector('.recent');
+
+									if (!recent) {
+										const recent = document.createElement('div');
+
+										recent.classList.add('recent');
+
+										chats__item.appendChild(recent);
+
+										recent.innerHTML = `24h`;
+									}
+								}
+							}
+						}
+					});
+
+					$this.getUsersByIds($this.users);
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
+		}
+
+		chatHandler() {
+			const $this = this;
+
+			$this.vaultHandler();
+
+			$this.renderBinds()
+		}
+
+		renderBinds() {
+			const $this = this;
+
+			const observer = () => {
+				const { isChatPage } = $this.app;
+
+				if (isChatPage) {
+					const binds = document.querySelector('[id="binds"]');
+
+					if (!binds) {
+						const chat__messages = document.querySelector('.b-chat__messages');
+
+						if (chat__messages) {
+							const binds = document.createElement('div');
+
+							binds.id = 'binds';
+
+							chat__messages.after(binds);
+
+							for (let i = 0; i < 24; i++) {
+								const bind = document.createElement('a');
+
+								bind.classList.add('bind');
+
+								bind.href = '#'
+
+								binds.appendChild(bind);
+
+								const currentBinds = (() => {
+									const item = localStorage.getItem('binds');
+
+									if (item) {
+										const json = JSON.parse(item);
+
+										return json;
+									}
+
+									return [];
+								})();
+
+								const currentBind: any = currentBinds[i];
+
+								if (currentBind) {
+									const { hint } = currentBind;
+
+									bind.title = hint;
+
+									bind.classList.add('bound');
+								}
+
+								bind.onclick = async (e) => {
+									e.preventDefault();
+
+									const { shiftKey } = e;
+
+									const currentBinds = (() => {
+										const item = localStorage.getItem('binds');
+
+										if (item) {
+											const json = JSON.parse(item);
+
+											return json;
+										}
+
+										return [];
+									})();
+
+									const currentBind: any = currentBinds[i];
+
+									if (shiftKey || !currentBind) {
+										const { hint, data } = currentBind ? currentBind : { hint: '', data: [] };
+
+										const div = document.createElement('div');
+
+										div.innerHTML = (() => {
+											const text = $this.modals['edit_bind'];
+
+											let replaced = text.replace(/{HINT}/g, hint);
+
+											replaced = replaced.replace(/{TEXTS}/g, data.join("\n\n"));
+
+											return replaced;
+										})();
+
+										const modal = <HTMLElement>div.firstChild;
+
+										if (modal) {
+											document.body.appendChild(modal);
+
+											const form = modal.querySelector('form');
+
+											if (form) {
+												form.onsubmit = e => {
+													e.preventDefault();
+
+													const formData = (() => {
+														const formData = new FormData(form);
+
+														const obj: any = Object.fromEntries(formData.entries());
+
+														obj.data = obj.data.split("\n\n");
+
+														return obj
+													})();
+
+													currentBinds[i] = formData;
+
+													const json = JSON.stringify(currentBinds);
+
+													localStorage.setItem('binds', json);
+
+													modal.remove();
+
+													binds.remove();
+
+													return true;
+												};
+											}
+
+											const markers = <NodeListOf<HTMLElement>>modal.querySelectorAll('.markers a');
+
+											markers.forEach((marker) => {
+												const textContent = marker.textContent.trim();
+
+												marker.onclick = e => {
+													e.preventDefault();
+
+													const textarea = modal.querySelector('textarea');
+
+													if (textarea) {
+														textarea.focus();
+
+														textarea.setRangeText(
+															` ${textContent}`,
+															textarea.selectionStart,
+															textarea.selectionEnd,
+															'end' // Moves cursor to the end of the inserted text
+														);
+													}
+
+													return true;
+												};
+											});
+										}
+
+										return true;
+									}
+
+									if (currentBind) {
+										const { data } = currentBind;
+
+										shuffle(data);
+
+										let message = data[0];
+
+										const chat_footer: any = document.querySelector('.m-chat-footer');
+
+										if (chat_footer) {
+											const { __vue__: vue } = chat_footer;
+
+											if (vue) {
+												const { $parent, makeSubmitMessage, setText, text: currentText, withUser } = vue;
+
+												const { id: userId, displayName } = withUser;
+
+												if (displayName) {
+													message = message.replace(/\%name/g, displayName);
+												}
+
+												if ('object' === typeof $this.users.get(userId)) {
+													const user = $this.users.get(userId);
+
+													const { displayName } = user;
+
+													if (displayName) {
+														message = message.replace(/\%name/g, displayName);
+													}
+												}
+
+												const emojis: string[] = [
+													'😊',  // Улыбающееся лицо
+													'😄',  // Широко улыбающееся лицо
+													'😃',  // Радостное лицо
+													'😁',  // Сияющее лицо
+													'🤩',  // Звёздные глаза
+													'🥰',  // Влюблённое лицо
+													'😍',  // Влюблённые глаза
+													'🤗',  // Обнимающее лицо
+													'😘',  // Воздушный поцелуй
+													'😇',  // Лицо с нимбом
+													'😉',  // Подмигивающее лицо
+													'😜',  // Подмигивающее лицо с языком
+													'🥳',  // Лицо с праздничным колпаком
+													'💦',  // Брызги (splash)
+													'😈',
+													'💓',
+													'💌',
+												];
+
+												while (/%emoji/.test(message)) {
+													shuffle(emojis);
+
+													const emoji = emojis[0];
+
+													message = message.replace(/%emoji/, emoji);
+												}
+
+												const hasToBeSent = /%send/.test(message);
+												const hasToBeAnswered = /%answer/.test(message);
+												const hasToBeLiked = /%like/.test(message);
+												const hasToBeClosed = /%close/.test(message);
+
+												message = message.replace(/\%\w+/g, '');
+
+												setText({ text: `${$this.stripTags(currentText)} ${message.trim()}` });
+
+												if (hasToBeAnswered || hasToBeLiked) {
+													if (userId) {
+														const int__userId = parseInt(userId);
+
+														const messages: Map<number, any> = (() => {
+															const chat_messages = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[at-attr="chat_message"]');
+
+															const messages = new Map();
+
+															chat_messages.forEach(chat_message => {
+																const { __vue__: vue } = chat_message;
+
+																const { message } = vue;
+
+																const { id: messageId } = message;
+
+																messages.set(messageId, message);
+															});
+
+															return messages;
+														})();
+
+														const fromUser = [...messages.values()].reverse().filter((message: any) => {
+															const { fromUser: userId_ } = message;
+
+															return userId_ == int__userId;
+														});
+
+														fromUser.map((message: any) => {
+															$this.likeMessage(message);
+														});
+
+														const message = fromUser[0];
+
+														if (message) {
+															const { id: messageId } = message;
+
+															if (!$parent.replyToMessageId) {
+																$parent.replyToMessageId = messageId;
+															}
+														}
+													}
+												}
+
+												if (hasToBeSent) {
+													makeSubmitMessage();
+												}
+											}
+										}
+									}
+
+									return true;
+								};
+							}
+						}
+					}
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
+		}
+
 		vaultHandler() {
 			const $this = this;
 
 			const observer = async () => {
-				const isChat = document.querySelector('.m-chat-title .b-username-row');
+				const { isChatPage } = $this.app;
 
-				if (isChat) {
-					const userId = (() => {
-						const userId = location.pathname.match(/(\d+)/)?.[1] || null;
-
-						if (userId) {
-							const int__userId = parseInt(userId);
-
-							return int__userId;
-						}
-
-						return false;
-					})();
+				if (isChatPage) {
+					const userId = parseInt($this.app.$store.state.chats.currentChat);
 
 					if (userId && userId == $this.currentChatId) {
 						await $this.fetchChatsUsersMedia(userId);
@@ -1523,7 +1565,7 @@ async function inject(extensionRootUrl) {
 			return text;
 		}
 
-		getUsersByIds(users: Map<number, any>) {
+		getUsersByIds(users: Map<number, any>, noextra: boolean = false) {
 			const $this = this;
 
 			return new Promise(async (resolve, reject) => {
@@ -1560,7 +1602,7 @@ async function inject(extensionRootUrl) {
 						if (subscribedOnData) {
 							const { totalSumm } = subscribedOnData;
 
-							if (0 < totalSumm) {
+							if (0 < totalSumm && !noextra) {
 								const BASE_PATH = `/api2/v2/users/notifications`;
 
 								const types = [
