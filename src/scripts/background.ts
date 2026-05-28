@@ -248,6 +248,78 @@ async function inject(extensionRootUrl) {
 			$this.chatHandler();
 
 			$this.chatsUsersTable();
+
+			$this.chatFooterHandler();
+		}
+
+		chatFooterHandler() {
+			const $this = this;
+
+			const observer = () => {
+				const chat_footer: any = document.querySelector('.m-chat-footer');
+
+				if (chat_footer) {
+					const { __vue__: vue } = chat_footer;
+
+					const { resetToDefault } = vue;
+
+					const send_btn = chat_footer.querySelector('[at-attr="send_btn"]');
+
+					const reset_btn = chat_footer.querySelector('[at-attr="reset_btn"]');
+
+					if (send_btn && !reset_btn) {
+						const reset_btn = <HTMLButtonElement>send_btn.cloneNode(true);
+
+						reset_btn.setAttribute('at-attr', 'reset_btn');
+
+						reset_btn.disabled = false;
+
+						reset_btn.innerHTML = 'Reset';
+
+						send_btn.before(reset_btn);
+
+						reset_btn.onclick = e => {
+							resetToDefault();
+						};
+					}
+
+					const { isChatPage } = $this.app;
+
+					if (isChatPage) {
+						const post__actions__btns = chat_footer.querySelector('.b-make-post__actions__btns');
+
+						if (post__actions__btns) {
+							const attach_file_photo = chat_footer.querySelector('[id="attach_file_photo"]');
+
+							const export_chat = chat_footer.querySelector('[id="export_chat"]');
+
+							if (attach_file_photo && !export_chat) {
+								const export_chat = <HTMLButtonElement>attach_file_photo.cloneNode(true);
+
+								export_chat.id = 'export_chat';
+
+								export_chat.innerHTML = export_chat.innerHTML.replaceAll('icon-media', 'icon-download');
+
+								post__actions__btns.appendChild(export_chat);
+
+								export_chat.onclick = e => {
+									$this.exportCurrentChat();
+								};
+							}
+						}
+					}
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
+		}
+
+		exportCurrentChat() {
+			const $this = this;
+
+			$this.showToast(`Exporting chat ${$this.currentChatId}...`);
 		}
 
 		chatsUsersTable() {
