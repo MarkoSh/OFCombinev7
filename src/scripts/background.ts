@@ -239,6 +239,8 @@ async function inject(extensionRootUrl) {
 
 			$this.handler();
 
+			$this.massDMPageHandler();
+
 			$this.forwardHandler();
 
 			$this.chatsHandler();
@@ -650,70 +652,6 @@ async function inject(extensionRootUrl) {
 
 			window['replyToMessage'] = (args) => { $this.replyToMessage(args) };
 
-			const isMassForm = location.pathname.includes('my/chats/send');
-
-			if (isMassForm) {
-				const chats__conversations: any = document.querySelector('.b-chats__conversations');
-
-				if (chats__conversations) {
-					const { __vue__: vue } = chats__conversations;
-
-					const { fetchUsersListsData } = vue;
-
-					const observer = async () => {
-						const { usersListsOffset } = vue;
-
-						if (0 < usersListsOffset) {
-							await fetchUsersListsData();
-
-							const { usersListsHasMore } = vue;
-
-							if (!usersListsHasMore) {
-								showToast('Lists loaded');
-
-								return;
-							}
-						}
-
-						setTimeout(observer, 100);
-					};
-
-					observer();
-				}
-
-				const chat__messages = document.querySelector('.b-chat__messages');
-
-				if (chat__messages) {
-					const tools = chat__messages.querySelector('[id="tools__massdm"]');
-
-					if (!tools) {
-						const tools = document.createElement('div');
-
-						tools.id = 'tools__massdm';
-
-						chat__messages.appendChild(tools);
-
-						tools.innerHTML = `
-						<div class="buttons-group">
-							<button class="g-btn m-rounded" onclick="includeLists()">Include lists</button>
-							<button class="g-btn m-rounded" onclick="excludeLists()">Exclude lists</button>
-							<button class="g-btn m-rounded onclick="resetLists()"">Reset lists</button>
-						</div>
-						<div class="buttons-group">
-							<button class="g-btn m-rounded" onclick="includeFans()">Include fans</button>
-							<button class="g-btn m-rounded" onclick="excludeFans()">Exclude fans</button>
-							<button class="g-btn m-rounded" onclick="resetFans()">Reset fans</button>
-						</div>
-						<div class="buttons-group">
-							<button class="g-btn m-rounded" onclick="loadLists()">Load lists</button>
-							<button class="g-btn m-rounded" onclick="loadFans()">Load fans</button>
-							<button class="g-btn m-rounded" onclick="loadTmpl()">Load template</button>
-							<button class="g-btn m-rounded" onclick="saveTmpl()">Save template</button>
-						</div>`;
-					}
-				}
-			}
-
 			const observer = async () => {
 				const card = <HTMLElement>document.querySelector('[id="card"]');
 
@@ -903,83 +841,6 @@ async function inject(extensionRootUrl) {
 						}
 					}
 
-					const chat_messages = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[at-attr="chat_message"]');
-
-					chat_messages.forEach(chat_message => {
-						const isFromMe = chat_message.classList.contains('m-from-me');
-
-						const { __vue__: vue } = chat_message;
-
-						const {
-							toggleLikeMessage,
-							deleteMessages,
-							unsendQueue,
-							entityId: messageId,
-							message,
-							isCanCancel,
-							withUser,
-							hasMedia,
-							onReply
-						} = vue;
-
-						const { id: userId } = withUser;
-
-						window['toggleLikeMessage'] = toggleLikeMessage;
-
-						window['deleteMessages'] = deleteMessages;
-
-						const { chatId, queueId, text } = message;
-
-						const chat__message__content = chat_message.querySelector(':scope > .b-chat__message__content');
-
-						if (chat__message__content) {
-							const tools = chat_message.querySelector('.message-tools');
-
-							if (!tools) {
-								const tools = document.createElement('div');
-
-								tools.classList.add('message-tools');
-
-								chat__message__content.after(tools);
-
-								tools.innerHTML = ``;
-
-								if (isFromMe) {
-									tools.innerHTML += `
-									<a href="/my/chats/chat/${chatId}/?firstId=${messageId}" title="Link" target="_blank">🔗</a>
-									<a href="/my/chats/send?scheduleMessageId=${queueId}#forward" title="Forward" target="_blank">🗯️</a>`;
-
-									if (hasMedia) {
-										tools.innerHTML += `
-										<a href="#" onclick="downloadMedia(this)" title="Download">📥️</a>`;
-									}
-
-									tools.innerHTML += `
-									<a href="#" onclick="replyToMessage(${messageId})" title="Reply">↪️</a>
-									<a href="#" onclick="copyMessage(this, '')" title="Copy">📋️</a>
-									<a href="#" onclick="translateMessage(this, '')" title="Translate">💱</a>
-									<a href="#" onclick="deleteMessages({chatId: ${chatId}, messageId: ${messageId}})" title="Unsend">❌</a>`;
-								} else {
-									tools.innerHTML += `
-									<a href="/my/chats/chat/${chatId}/?firstId=${messageId}" title="Link" target="_blank">🔗</a>
-									<a href="#" onclick="toggleLikeMessage({messageId: ${messageId}, withUserId: ${userId}})" title="Like">❤️</a>
-									<a href="#" onclick="replyToMessage(${messageId})" title="Reply">↪️</a>
-									<a href="#" onclick="copyMessage(this, '')" title="Copy">📋️</a>`;
-
-									if (hasMedia) {
-										tools.innerHTML += `
-										<a href="#" onclick="downloadMedia(this)" title="Download">📥️</a>`;
-									}
-
-									tools.innerHTML += `
-									<a href="#" onclick="translateMessage(this, '')" title="Translate">💱</a>`;
-								}
-
-
-							}
-						}
-					});
-
 					if (userId) {
 						const int__userId = parseInt(userId);
 
@@ -1057,6 +918,80 @@ async function inject(extensionRootUrl) {
 			setInterval(() => {
 				$this.users = new Map();
 			}, 1 * 60 * 1000);
+		}
+
+		massDMPageHandler() {
+			const $this = this;
+
+			const observer = () => {
+				const { isChatSendPage } = $this.app;
+
+				if (isChatSendPage) {
+					const chats__conversations: any = document.querySelector('.b-chats__conversations');
+
+					if (chats__conversations) {
+						const { __vue__: vue } = chats__conversations;
+
+						const { fetchUsersListsData } = vue;
+
+						const observer = async () => {
+							const { usersListsOffset } = vue;
+
+							if (0 < usersListsOffset) {
+								await fetchUsersListsData();
+
+								const { usersListsHasMore } = vue;
+
+								if (!usersListsHasMore) {
+									showToast('Lists loaded');
+
+									return;
+								}
+							}
+
+							setTimeout(observer, 100);
+						};
+
+						observer();
+					}
+
+					const chat__messages = document.querySelector('.b-chat__messages');
+
+					if (chat__messages) {
+						const tools = chat__messages.querySelector('[id="tools__massdm"]');
+
+						if (!tools) {
+							const tools = document.createElement('div');
+
+							tools.id = 'tools__massdm';
+
+							chat__messages.appendChild(tools);
+
+							tools.innerHTML = `
+							<div class="buttons-group">
+								<button class="g-btn m-rounded" onclick="includeLists()">Include lists</button>
+								<button class="g-btn m-rounded" onclick="excludeLists()">Exclude lists</button>
+								<button class="g-btn m-rounded onclick="resetLists()"">Reset lists</button>
+							</div>
+							<div class="buttons-group">
+								<button class="g-btn m-rounded" onclick="includeFans()">Include fans</button>
+								<button class="g-btn m-rounded" onclick="excludeFans()">Exclude fans</button>
+								<button class="g-btn m-rounded" onclick="resetFans()">Reset fans</button>
+							</div>
+							<div class="buttons-group">
+								<button class="g-btn m-rounded" onclick="loadLists()">Load lists</button>
+								<button class="g-btn m-rounded" onclick="loadFans()">Load fans</button>
+								<button class="g-btn m-rounded" onclick="loadTmpl()">Load template</button>
+								<button class="g-btn m-rounded" onclick="saveTmpl()">Save template</button>
+							</div>`;
+						}
+					}
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
 		}
 
 		forwardHandler() {
@@ -1179,9 +1114,98 @@ async function inject(extensionRootUrl) {
 		chatHandler() {
 			const $this = this;
 
+			$this.chatMessagesHandler();
+
 			$this.vaultHandler();
 
 			$this.renderBinds()
+		}
+
+		chatMessagesHandler() {
+			const $this = this;
+
+			const observer = () => {
+				const chat_messages = <NodeListOf<HTMLElement | any>>document.querySelectorAll('[at-attr="chat_message"]');
+
+				chat_messages.forEach(chat_message => {
+					const isFromMe = chat_message.classList.contains('m-from-me');
+
+					const { __vue__: vue } = chat_message;
+
+					const {
+						toggleLikeMessage,
+						deleteMessages,
+						unsendQueue,
+						entityId: messageId,
+						message,
+						isCanCancel,
+						withUser,
+						hasMedia,
+						onReply
+					} = vue;
+
+					const { id: userId } = withUser;
+
+					window['toggleLikeMessage'] = toggleLikeMessage;
+
+					window['deleteMessages'] = deleteMessages;
+
+					const { chatId, queueId, text } = message;
+
+					const chat__message__content = chat_message.querySelector(':scope > .b-chat__message__content');
+
+					if (chat__message__content) {
+						const tools = chat_message.querySelector('.message-tools');
+
+						if (!tools) {
+							const tools = document.createElement('div');
+
+							tools.classList.add('message-tools');
+
+							chat__message__content.after(tools);
+
+							tools.innerHTML = ``;
+
+							if (isFromMe) {
+								tools.innerHTML += `
+									<a href="/my/chats/chat/${chatId}/?firstId=${messageId}" title="Link" target="_blank">🔗</a>
+									<a href="/my/chats/send?scheduleMessageId=${queueId}#forward" title="Forward" target="_blank">🗯️</a>`;
+
+								if (hasMedia) {
+									tools.innerHTML += `
+									<a href="#" onclick="downloadMedia(this)" title="Download">📥️</a>`;
+								}
+
+								tools.innerHTML += `
+									<a href="#" onclick="replyToMessage(${messageId})" title="Reply">↪️</a>
+									<a href="#" onclick="copyMessage(this, '')" title="Copy">📋️</a>
+									<a href="#" onclick="translateMessage(this, '')" title="Translate">💱</a>
+									<a href="#" onclick="deleteMessages({chatId: ${chatId}, messageId: ${messageId}})" title="Unsend">❌</a>`;
+							} else {
+								tools.innerHTML += `
+									<a href="/my/chats/chat/${chatId}/?firstId=${messageId}" title="Link" target="_blank">🔗</a>
+									<a href="#" onclick="toggleLikeMessage({messageId: ${messageId}, withUserId: ${userId}})" title="Like">❤️</a>
+									<a href="#" onclick="replyToMessage(${messageId})" title="Reply">↪️</a>
+									<a href="#" onclick="copyMessage(this, '')" title="Copy">📋️</a>`;
+
+								if (hasMedia) {
+									tools.innerHTML += `
+									<a href="#" onclick="downloadMedia(this)" title="Download">📥️</a>`;
+								}
+
+								tools.innerHTML += `
+									<a href="#" onclick="translateMessage(this, '')" title="Translate">💱</a>`;
+							}
+
+
+						}
+					}
+				});
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
 		}
 
 		renderBinds() {
@@ -1471,7 +1495,9 @@ async function inject(extensionRootUrl) {
 				const { isChatPage } = $this.app;
 
 				if (isChatPage) {
-					const userId = parseInt($this.app.$store.state.chats.currentChat);
+					const { currentChat } = $this.app.$store.state.chats;
+
+					const userId = parseInt(currentChat);
 
 					if (userId && userId == $this.currentChatId) {
 						await $this.fetchChatsUsersMedia(userId);
