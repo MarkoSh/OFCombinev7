@@ -1,5 +1,23 @@
 console.log('[BACKGROUND] OFCombine v7');
 
+class WorkerTimeout {
+	worker: any = null;
+	constructor(callback, timeout) {
+		const $this = this;
+		const blob = new Blob([`setTimeout(() => postMessage(0), ${timeout});`]);
+		const workerScript = URL.createObjectURL(blob);
+		$this.worker = new Worker(workerScript);
+		$this.worker.onmessage = () => {
+			callback();
+			$this.worker.terminate();
+		};
+	}
+	stop() {
+		const $this = this;
+		$this.worker.terminate();
+	}
+}
+
 async function inject(extensionRootUrl) {
 	if (window['hasBeenInjected']) return;
 
@@ -422,7 +440,7 @@ async function inject(extensionRootUrl) {
 					return;
 				}
 
-				setTimeout(observer, 100);
+				new WorkerTimeout(observer, 100);
 			};
 
 			observer();
