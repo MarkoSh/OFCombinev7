@@ -394,15 +394,19 @@ async function inject(extensionRootUrl) {
 			const observer = async () => {
 				const messages = <Map<number, any>>await $this.fetchMessages($this.currentChatId, fromId, 100);
 
-				exported = new Map([...exported, ...messages]);
+				if (messages.size) {
+					const message = [...messages.values()].at(-1);
 
-				size += messages.size;
+					const { createdAt } = message;
 
-				$this.showToast(`Collected messages for chat ${$this.currentChatId}: ${size}`);
+					exported = new Map([...exported, ...messages]);
 
-				fromId = [...messages.keys()].at(-1) || 0;
+					size += messages.size;
 
-				if (!messages.size) {
+					$this.showToast(`Collected messages for chat ${$this.currentChatId}: ${size} for date ${createdAt}`);
+
+					fromId = [...messages.keys()].at(-1) || 0;
+				} else {
 					$this.showToast(`Exporting chat ${$this.currentChatId}...done`);
 
 					if (1000 < messages.size) {
