@@ -395,22 +395,26 @@ async function inject(extensionRootUrl) {
 
 							const data = JSON.stringify(Object.fromEntries(chunk));
 
-							const blob = new Blob([data], { type: "application/json" });
+							const gz = await $this.compress(data);
+
+							const blob = new Blob([gz], { type: "application/gzip" });
 
 							const link = document.createElement("a");
 							link.href = URL.createObjectURL(blob);
-							link.download = `export_chat_${$this.currentChatId}_part${i + 1}.json`;
+							link.download = `export_chat_${$this.currentChatId}_part${i + 1}.json.gz`;
 
 							link.click();
 						}
 					} else {
 						const data = JSON.stringify(Object.fromEntries(exported));
 
-						const blob = new Blob([data], { type: "application/json" });
+						const gz = await $this.compress(data);
+
+						const blob = new Blob([gz], { type: "application/gzip" });
 
 						const link = document.createElement("a");
 						link.href = URL.createObjectURL(blob);
-						link.download = `export_chat_${$this.currentChatId}.json`;
+						link.download = `export_chat_${$this.currentChatId}.json.gz`;
 
 						link.click();
 					}
@@ -423,6 +427,25 @@ async function inject(extensionRootUrl) {
 
 			observer();
 		}
+
+		async compress(data: string, encoding: 'gzip' | 'deflate' = 'gzip'): Promise<ArrayBuffer> {
+			const byteArray = new TextEncoder().encode(data);
+
+			// Создаем поток из наших байтов
+			const stream = new ReadableStream({
+				start(controller) {
+					controller.enqueue(byteArray);
+					controller.close();
+				}
+			});
+
+			// Прогоняем через CompressionStream
+			const compressionStream = new CompressionStream(encoding);
+			const compressedStream = stream.pipeThrough(compressionStream);
+
+			// Читаем результат как ArrayBuffer через Response
+			return await new Response(compressedStream).arrayBuffer();
+		};
 
 		chatsUsersTable() {
 			const $this = this;
