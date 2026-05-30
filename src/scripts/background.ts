@@ -409,10 +409,10 @@ async function inject(extensionRootUrl) {
 				} else {
 					$this.showToast(`Exporting chat ${$this.currentChatId}...done`);
 
-					if (1000 < messages.size) {
-						const entries = Array.from(messages.entries());
+					if (1000 < exported.size) {
+						const entries = Array.from(exported.entries());
 
-						for (let i = 0; i < messages.size; i += 1000) {
+						for (let i = 0; i < exported.size; i += 1000) {
 							const chunk = new Map(entries.slice(i, i + 1000));
 
 							const data = JSON.stringify(Object.fromEntries(chunk));
