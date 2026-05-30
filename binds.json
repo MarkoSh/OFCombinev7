@@ -1,0 +1,235 @@
+[
+    {
+        "hint": "%name",
+        "data": [
+            "%name 💦 %send %answer %like",
+            "%name 💋 %send %answer %like",
+            "%name ❤️ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Whats your name?",
+        "data": [
+            "Whats your name? 💦 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Did you miss me?",
+        "data": [
+            "%name did you miss me a little? 😘 %send %answer %like",
+            "Be honest %name… you missed me, right? 💋 %send %answer %like",
+            "I bet you were thinking about me %name ❤️ %send %answer %like",
+            "Tell me how much you missed me %name 🔥 %send %answer %like",
+            "Something tells me you were waiting for me %name 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Thinking about me?",
+        "data": [
+            "%name are you thinking about me right now? 💭 %send %answer %like",
+            "I can’t stop thinking about you %name 💞 %send %answer %like",
+            "Am I distracting your thoughts %name? 😏 %send %answer %like",
+            "I hope I’m on your mind %name 💋 %send %answer %like",
+            "Tell me I crossed your mind today %name ❤️ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Come closer",
+        "data": [
+            "Come a little closer to me %name 💕 %send %answer %like",
+            "Don’t be shy %name… step closer 😘 %send %answer %like",
+            "I like when you’re near %name 💋 %send %answer %like",
+            "Let’s close the distance %name 🔥 %send %answer %like",
+            "Closer feels better, doesn’t it %name? 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Sweet secret",
+        "data": [
+            "I have a sweet little secret for you %name 🍓 %send %answer %like",
+            "Want to hear something just between us %name? 😏 %send %answer %like",
+            "Promise you’ll keep my secret %name? 💋 %send %answer %like",
+            "It’s a secret only for you %name 💌 %send %answer %like",
+            "Let me whisper something nice %name 💞 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Romantic evening",
+        "data": [
+            "Imagine a romantic evening with me %name 🌙 %send %answer %like",
+            "How would you spend a night with me %name? 😘 %send %answer %like",
+            "Candles, music… just us %name 🕯️ %send %answer %like",
+            "I’d choose you for my evening %name 💖 %send %answer %like",
+            "Let’s make tonight unforgettable %name ✨ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Miss you already",
+        "data": [
+            "I miss you already %name 💔 %send %answer %like",
+            "Why aren’t you here with me %name? 😘 %send %answer %like",
+            "It’s better when we talk %name 💞 %send %answer %like",
+            "Don’t disappear on me %name 💋 %send %answer %like",
+            "Come back to me soon %name ❤️ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Dreaming of you",
+        "data": [
+            "Have you ever dreamed about me %name? 🌙 %send %answer %like",
+            "Maybe I’ll be in your dreams tonight %name 😏 %send %answer %like",
+            "I wouldn’t mind dreaming about you %name 💋 %send %answer %like",
+            "Tell me your sweetest dream %name 💖 %send %answer %like",
+            "Let’s make our dreams interesting %name 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Hot thought",
+        "data": [
+            "I just had a naughty thought %name 🔥 %send %answer %like",
+            "Want to know what I’m thinking about %name? 😏 %send %answer %like",
+            "You inspire dangerous thoughts %name 💋 %send %answer %like",
+            "My mind is being very playful right now %name 😉 %send %answer %like",
+            "Careful %name… my thoughts are getting warm ❤️ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Say something nice",
+        "data": [
+            "Say something sweet to me %name 💖 %send %answer %like",
+            "I love hearing from you %name 😘 %send %answer %like",
+            "Whisper something cute %name 💋 %send %answer %like",
+            "Your words make me smile %name 😊 %send %answer %like",
+            "Don’t keep me waiting %name 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Feel the spark",
+        "data": [
+            "Do you feel that spark between us %name? ✨ %send %answer %like",
+            "There’s something special here %name 💞 %send %answer %like",
+            "I like this chemistry %name 😘 %send %answer %like",
+            "It feels electric %name ⚡ %send %answer %like",
+            "Tell me you feel it too %name 💋 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Let’s play",
+        "data": [
+            "Want to play a little game %name? 😉 %send %answer %like",
+            "Truth or flirt %name? 💋 %send %answer %like",
+            "I’m in a playful mood %name 🔥 %send %answer %like",
+            "Let’s have some fun together %name 💖 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Need your attention",
+        "data": [
+            "I want your full attention %name 💞 %send %answer %like",
+            "Focus on me for a minute %name 😘 %send %answer %like",
+            "Look at me… only me %name 💋 %send %answer %like",
+            "I love when you notice me %name ❤️ %send %answer %like",
+            "Give me that look %name 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "You drive me crazy",
+        "data": [
+            "You’re driving me a little crazy %name 😏 %send %answer %like",
+            "Why are you so attractive %name? 💋 %send %answer %like",
+            "It’s hard to resist you %name 🔥 %send %answer %like",
+            "You have dangerous charm %name 😉 %send %answer %like",
+            "I blame you for my smile %name ❤️ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Let’s get closer",
+        "data": [
+            "Let’s get to know each other better %name 💞 %send %answer %like",
+            "Tell me something personal %name 😘 %send %answer %like",
+            "I want to be closer to you %name 💋 %send %answer %like",
+            "Open up just a little %name 😉 %send %answer %like",
+            "I’m curious about you %name ❤️ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Smile for me",
+        "data": [
+            "Smile for me %name 😊 %send %answer %like",
+            "I like when you smile %name 💖 %send %answer %like",
+            "Bet you look cute right now %name 😘 %send %answer %like",
+            "Your smile is my favorite %name 💋 %send %answer %like",
+            "Did I make you smile %name? 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Temptation",
+        "data": [
+            "Am I your little temptation %name? 😏 %send %answer %like",
+            "Can you resist me %name? 💋 %send %answer %like",
+            "I like playing with fire %name 🔥 %send %answer %like",
+            "Maybe I’m trouble %name 😉 %send %answer %like",
+            "Danger can be fun %name ❤️ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Sweet moment",
+        "data": [
+            "Let’s create a sweet moment %name 💞 %send %answer %like",
+            "This feels special already %name 💖 %send %answer %like",
+            "Stay in this moment with me %name 😘 %send %answer %like",
+            "I like our vibe %name 💋 %send %answer %like",
+            "Don’t let this feeling fade %name 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Your style",
+        "data": [
+            "I love your style %name 😎 %send %answer %like",
+            "You stand out to me %name 💋 %send %answer %like",
+            "There’s something about you %name 💖 %send %answer %like",
+            "You’ve got confidence %name 🔥 %send %answer %like",
+            "I like the way you talk %name 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Stay with me",
+        "data": [
+            "Stay with me a little longer %name 💞 %send %answer %like",
+            "Don’t go just yet %name 😘 %send %answer %like",
+            "I’m enjoying this too much %name 💋 %send %answer %like",
+            "Let’s keep talking %name ❤️ %send %answer %like",
+            "I want more of you %name 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Ready for me?",
+        "data": [
+            "Are you ready for me %name? 😏 %send %answer %like",
+            "Can you handle my energy %name? 🔥 %send %answer %like",
+            "I can be very persuasive %name 💋 %send %answer %like",
+            "Think you can impress me %name? 💖 %send %answer %like",
+            "Let’s see what you’ve got %name 😉 %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Flirty mood",
+        "data": [
+            "I’m in a flirty mood today %name 😘 %send %answer %like",
+            "Careful… I might tease you %name 💋 %send %answer %like",
+            "Feeling a little bold %name 🔥 %send %answer %like",
+            "Hope you can keep up %name 😉 %send %answer %like",
+            "Let’s make this fun %name ❤️ %send %answer %like"
+        ]
+    },
+    {
+        "hint": "Only you",
+        "data": [
+            "Right now, it’s just you and me %name 💞 %send %answer %like",
+            "You’ve got my attention %name 💖 %send %answer %like",
+            "I like focusing on you %name 😘 %send %answer %like",
+            "Don’t make me blush %name 💋 %send %answer %like",
+            "You’re my favorite distraction %name 😉 %send %answer %like"
+        ]
+    }
+]

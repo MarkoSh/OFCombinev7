@@ -366,6 +366,62 @@ async function inject(extensionRootUrl) {
 			const $this = this;
 
 			$this.showToast(`Exporting chat ${$this.currentChatId}...`);
+
+			let fromId = 0;
+
+			let size = 0;
+
+			let exported = new Map();
+
+			const observer = async () => {
+				const messages = <Map<number, any>>await $this.fetchMessages($this.currentChatId, fromId, 100);
+
+				exported = new Map([...exported, ...messages]);
+
+				size += messages.size;
+
+				$this.showToast(`Collected messages for chat ${$this.currentChatId}: ${size}`);
+
+				fromId = [...messages.keys()].at(-1) || 0;
+
+				if (!messages.size) {
+					$this.showToast(`Exporting chat ${$this.currentChatId}...done`);
+
+					if (1000 < messages.size) {
+						const entries = Array.from(messages.entries());
+
+						for (let i = 0; i < messages.size; i += 1000) {
+							const chunk = new Map(entries.slice(i, i + 1000));
+
+							const data = JSON.stringify(Object.fromEntries(chunk));
+
+							const blob = new Blob([data], { type: "application/json" });
+
+							const link = document.createElement("a");
+							link.href = URL.createObjectURL(blob);
+							link.download = `export_chat_${$this.currentChatId}_part${i + 1}.json`;
+
+							link.click();
+						}
+					} else {
+						const data = JSON.stringify(Object.fromEntries(exported));
+
+						const blob = new Blob([data], { type: "application/json" });
+
+						const link = document.createElement("a");
+						link.href = URL.createObjectURL(blob);
+						link.download = `export_chat_${$this.currentChatId}.json`;
+
+						link.click();
+					}
+
+					return;
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
 		}
 
 		chatsUsersTable() {
@@ -1041,38 +1097,10 @@ async function inject(extensionRootUrl) {
 		massDMPageHandler() {
 			const $this = this;
 
-			const observer = () => {
+			const observer = async () => {
 				const { isChatSendPage } = $this.app;
 
 				if (isChatSendPage) {
-					const chats__conversations: any = document.querySelector('.b-chats__conversations');
-
-					if (chats__conversations) {
-						const { __vue__: vue } = chats__conversations;
-
-						const { fetchUsersListsData } = vue;
-
-						const observer = async () => {
-							const { usersListsOffset } = vue;
-
-							if (0 < usersListsOffset) {
-								await fetchUsersListsData();
-
-								const { usersListsHasMore } = vue;
-
-								if (!usersListsHasMore) {
-									showToast('Lists loaded');
-
-									return;
-								}
-							}
-
-							setTimeout(observer, 100);
-						};
-
-						observer();
-					}
-
 					const chat__messages = document.querySelector('.b-chat__messages');
 
 					if (chat__messages) {
@@ -1110,6 +1138,52 @@ async function inject(extensionRootUrl) {
 			};
 
 			observer();
+
+			{
+				const observer = async () => {
+					const { isChatSendPage } = $this.app;
+
+					if (isChatSendPage) {
+						const chats__conversations: any = document.querySelector('.b-chats__conversations');
+
+						if (chats__conversations) {
+							const { __vue__: vue } = chats__conversations;
+
+							const { fetchUsersListsData } = vue;
+
+							new Promise<void>((resolve, reject) => {
+								const observer = async () => {
+									const { usersListsOffset } = vue;
+
+									if (0 < usersListsOffset) {
+										await fetchUsersListsData();
+
+										const { usersListsHasMore } = vue;
+
+										if (!usersListsHasMore) {
+											showToast('Lists loaded');
+
+											resolve();
+
+											return;
+										}
+									}
+
+									setTimeout(observer, 100);
+								};
+
+								observer();
+							});
+
+							return;
+						}
+					}
+
+					setTimeout(observer, 100);
+				};
+
+				observer();
+			}
 		}
 
 		forwardHandler() {
@@ -1903,13 +1977,13 @@ async function inject(extensionRootUrl) {
 			});
 		}
 
-		async fetchMessages(int__userId: number = 0) {
+		async fetchMessages(int__userId: number = 0, fromId: number = 0, limit: number = 10) {
 			const $this = this;
 
 			return new Promise(async (resolve, reject) => {
 				const BASE_PATH = `/api2/v2/chats/${int__userId}/messages`;
 
-				const PARAMS = `limit=10&order=desc&skip_users=all`;
+				const PARAMS = `limit=${limit}&order=desc&skip_users=all${fromId ? `&id=${fromId}` : ''}`;
 
 				const path = `${BASE_PATH}?${PARAMS}`;
 
