@@ -481,14 +481,19 @@ async function inject(extensionRootUrl) {
 
 				const { name } = to;
 
-				if ('CustomList' == name) {
+				if ([
+					'SubscribersByType',
+					'SubscribesByType',
+					'MyFriends',
+					'CustomList'
+				].includes(name)) {
 					const btns_group = document.querySelector('.l-main-content.m-r-side .b-btns-group.m-move-right');
 
 					if (btns_group) {
 						const btn_export = btns_group.querySelector('[id="export"]');
 
 						if (!btn_export) {
-							const btn = btns_group.querySelector('button');
+							const btn = btns_group.querySelector('.g-btn');
 
 							if (btn) {
 								const btn_export = <HTMLAnchorElement>btn.cloneNode(true);
@@ -497,11 +502,180 @@ async function inject(extensionRootUrl) {
 
 								btn_export.id = 'export';
 
-								btn_export.setAttribute('aria-label', 'Export priority inbox');
+								btn_export.setAttribute('aria-label', 'Export list');
 
-								btn_export.innerHTML = btn_export.innerHTML.replace(/icon-(\w+)/g, 'icon-download');
+								btn_export.innerHTML = btn_export.innerHTML.replace(/icon-([a-z\-]+)/g, 'icon-download');
 
 								btns_group.appendChild(btn_export);
+
+								btn_export.onclick = e => {
+									e.preventDefault();
+
+									const { route } = $this.app;
+
+									const { to } = route;
+
+									const { name, params } = to;
+
+									const { list: listId, title } = params;
+
+									const listId_ = (() => {
+										if ('SubscribersByType' == name) return 'fans';
+										if ('SubscribesByType' == name) return 'following';
+
+										return listId;
+									})();
+
+									const wnd = window.open(`about:blank#${listId_}`);
+
+									if (wnd) {										
+										const document = wnd.document;
+
+										document.title = title || listId_;
+
+										const script = <HTMLScriptElement>document.createElement('script');
+
+										script.type = 'text/javascript';
+
+										script.src = 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
+
+										document.head.appendChild(script);
+
+										script.onload = async (e) => {
+											const Handsontable = wnd['Handsontable'];
+
+											const hot = new Handsontable(container, {
+												data: [],
+												colHeaders: [
+													'id',
+													'canReceiveChatMessage',
+													'suggestedName',
+													'displayName',
+													'name',
+													'username',
+													'notice',
+													'profileLink',
+													'subscribeAt',
+													'lastSeen',
+													'totalSum',
+													'expired',
+													'chatLink',
+													'isRealPerformer',
+												],
+												columnSorting: true,
+												filters: true,
+												dropdownMenu: true,
+												rowHeaders: true,
+												height: 'auto',
+												autoWrapRow: true,
+												autoWrapCol: true,
+												licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
+											});
+
+											hot.addHook('afterChange', (rows, amount) => {
+												if (rows) {
+													rows.map(row => {
+														const [rowNum, _, __, value] = row;
+
+														const data = hot.getDataAtRow(rowNum);
+
+														const userId = data[0];
+														const displayName = data[3];
+
+														$this.setName(userId, displayName);
+													});
+												}
+											});
+
+											let offset = 0;
+
+											const observer = async () => {
+												const usersListUsers = await $this.fetchUsersListUsers(listId_, offset);
+
+												const { list, hasMore, nextOffset } = usersListUsers;
+
+												const users = new Map();
+
+												list.map(user => {
+													users.set(user.id, false);
+												});
+
+												await $this.getUsersByIds(users, true);
+
+												const current = hot.getData();
+
+												const data = current.concat([...users.values()].map(user => {
+													const {
+														id: userId,
+														canReceiveChatMessage,
+														displayName,
+														name,
+														username,
+														notice,
+														lastSeen,
+														subscribedOnExpiredNow,
+														isRealPerformer,
+														subscribedOnData,
+													} = user;
+
+													const suggestedName = $this.getCleanName(displayName || name || username || "");
+
+													const profileLink = `https://onlyfans.com/${username}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+
+													const [subscribeAt, totalSumm] = (() => {
+														if (subscribedOnData) {
+															const { subscribeAt, totalSumm } = subscribedOnData;
+
+															return [subscribeAt, totalSumm]
+														}
+
+														return [];
+													})();
+
+													return [
+														userId,
+														canReceiveChatMessage,
+														suggestedName,
+														displayName,
+														name,
+														username,
+														notice,
+														profileLink,
+														subscribeAt,
+														lastSeen,
+														totalSumm,
+														subscribedOnExpiredNow,
+														chatLink,
+														isRealPerformer,
+													];
+												}));
+
+												hot.updateData(data);
+
+												offset = nextOffset;
+
+												if (!hasMore) {
+													wnd.alert('List loaded');
+
+													return;
+												}
+
+												setTimeout(observer, 100);
+											};
+
+											observer();
+										};
+
+										const container = document.createElement('div');
+
+										container.id = 'container';
+
+										document.body.appendChild(container);
+									}
+
+									return true;
+								};
 							}
 						}
 					}
@@ -1982,6 +2156,19 @@ async function inject(extensionRootUrl) {
 
 				resolve(users);
 			});
+		}
+
+		async fetchUsersListUsers(listId: any, offset: number = 0) {
+			const $this = this;
+
+			const BASE_PATH = `/api2/v2/lists/${listId}/users`;
+			const PARAMS = `limit=10&format=infinite${offset ? `&offset=${offset}` : ''}`;
+
+			const path = `${BASE_PATH}?${PARAMS}`;
+
+			const response = await queue.add(async () => await OFSign.get(path));
+
+			return await response.json();
 		}
 
 		async fetchChats(offset: number = 0, filter: string | boolean = 'priority') {
