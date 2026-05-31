@@ -269,6 +269,8 @@ async function inject(extensionRootUrl) {
 
 			$this.chatsUsersTable();
 
+			$this.listUsersTable();
+
 			$this.chatFooterHandler();
 		}
 
@@ -469,187 +471,234 @@ async function inject(extensionRootUrl) {
 			return await new Response(compressedStream).arrayBuffer();
 		};
 
+		listUsersTable() {
+			const $this = this;
+
+			const observer = () => {
+				const { route } = $this.app;
+
+				const { to } = route;
+
+				const { name } = to;
+
+				if ('CustomList' == name) {
+					const btns_group = document.querySelector('.l-main-content.m-r-side .b-btns-group.m-move-right');
+
+					if (btns_group) {
+						const btn_export = btns_group.querySelector('[id="export"]');
+
+						if (!btn_export) {
+							const btn = btns_group.querySelector('button');
+
+							if (btn) {
+								const btn_export = <HTMLAnchorElement>btn.cloneNode(true);
+
+								btn_export.href = '#';
+
+								btn_export.id = 'export';
+
+								btn_export.setAttribute('aria-label', 'Export priority inbox');
+
+								btn_export.innerHTML = btn_export.innerHTML.replace(/icon-(\w+)/g, 'icon-download');
+
+								btns_group.appendChild(btn_export);
+							}
+						}
+					}
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
+		}
+
 		chatsUsersTable() {
 			const $this = this;
 
 			const observer = () => {
-				const btns_group = document.querySelector('.b-btns-group.m-move-right');
+				const { isChatPage } = $this.app;
 
-				if (btns_group) {
-					const btn_export = btns_group.querySelector('[id="export"]');
+				if (isChatPage) {
+					const btns_group = document.querySelector('.b-btns-group.m-move-right');
 
-					if (!btn_export) {
-						const btn = btns_group.querySelector('[href="/my/chats/send"]');
+					if (btns_group) {
+						const btn_export = btns_group.querySelector('[id="export"]');
 
-						if (btn) {
-							const btn_export = <HTMLAnchorElement>btn.cloneNode(true);
+						if (!btn_export) {
+							const btn = btns_group.querySelector('[href="/my/chats/send"]');
 
-							btn_export.href = '#';
+							if (btn) {
+								const btn_export = <HTMLAnchorElement>btn.cloneNode(true);
 
-							btn_export.id = 'export';
+								btn_export.href = '#';
 
-							btn_export.setAttribute('aria-label', 'Export priority inbox');
+								btn_export.id = 'export';
 
-							btn_export.innerHTML = btn_export.innerHTML.replaceAll('icon-add', 'icon-download');
+								btn_export.setAttribute('aria-label', 'Export priority inbox');
 
-							btns_group.appendChild(btn_export);
+								btn_export.innerHTML = btn_export.innerHTML.replaceAll('icon-add', 'icon-download');
 
-							btn_export.onclick = e => {
-								e.preventDefault();
+								btns_group.appendChild(btn_export);
 
-								const wnd = window.open('about:blank#inbox');
+								btn_export.onclick = e => {
+									e.preventDefault();
 
-								if (wnd) {
-									const document = wnd.document;
+									const wnd = window.open('about:blank#inbox');
 
-									document.title = 'Inbox';
+									if (wnd) {
+										const document = wnd.document;
 
-									const script = <HTMLScriptElement>document.createElement('script');
+										document.title = 'Inbox';
 
-									script.type = 'text/javascript';
+										const script = <HTMLScriptElement>document.createElement('script');
 
-									script.src = 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
+										script.type = 'text/javascript';
 
-									document.head.appendChild(script);
+										script.src = 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
 
-									script.onload = async (e) => {
-										const Handsontable = wnd['Handsontable'];
+										document.head.appendChild(script);
 
-										const hot = new Handsontable(container, {
-											data: [],
-											colHeaders: [
-												'id',
-												'canReceiveChatMessage',
-												'suggestedName',
-												'displayName',
-												'name',
-												'username',
-												'notice',
-												'profileLink',
-												'subscribeAt',
-												'lastSeen',
-												'totalSum',
-												'expired',
-												'chatLink',
-												'isRealPerformer',
-											],
-											columnSorting: true,
-											filters: true,
-											dropdownMenu: true,
-											rowHeaders: true,
-											height: 'auto',
-											autoWrapRow: true,
-											autoWrapCol: true,
-											licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
-										});
+										script.onload = async (e) => {
+											const Handsontable = wnd['Handsontable'];
 
-										hot.addHook('afterChange', (rows, amount) => {
-											if (rows) {
-												rows.map(row => {
-													const [rowNum, _, __, value] = row;
-
-													const data = hot.getDataAtRow(rowNum);
-
-													const userId = data[0];
-													const displayName = data[3];
-
-													$this.setName(userId, displayName);
-												});
-											}
-										});
-
-										let offset = 0;
-
-										const observer = async () => {
-											const chats = await $this.fetchChats(offset);
-
-											const { list, hasMore } = chats;
-
-											const users = new Map();
-
-											list.map(chat => {
-												users.set(chat.withUser.id, false);
+											const hot = new Handsontable(container, {
+												data: [],
+												colHeaders: [
+													'id',
+													'canReceiveChatMessage',
+													'suggestedName',
+													'displayName',
+													'name',
+													'username',
+													'notice',
+													'profileLink',
+													'subscribeAt',
+													'lastSeen',
+													'totalSum',
+													'expired',
+													'chatLink',
+													'isRealPerformer',
+												],
+												columnSorting: true,
+												filters: true,
+												dropdownMenu: true,
+												rowHeaders: true,
+												height: 'auto',
+												autoWrapRow: true,
+												autoWrapCol: true,
+												licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
 											});
 
-											await $this.getUsersByIds(users, true);
+											hot.addHook('afterChange', (rows, amount) => {
+												if (rows) {
+													rows.map(row => {
+														const [rowNum, _, __, value] = row;
 
-											const current = hot.getData();
+														const data = hot.getDataAtRow(rowNum);
 
-											const data = current.concat([...users.values()].map(user => {
-												const {
-													id: userId,
-													canReceiveChatMessage,
-													displayName,
-													name,
-													username,
-													notice,
-													lastSeen,
-													subscribedOnExpiredNow,
-													isRealPerformer,
-													subscribedOnData,
-												} = user;
+														const userId = data[0];
+														const displayName = data[3];
 
-												const suggestedName = $this.getCleanName(displayName || name || username || "");
+														$this.setName(userId, displayName);
+													});
+												}
+											});
 
-												const profileLink = `https://onlyfans.com/${username}`;
-												const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+											let offset = 0;
 
-												const [subscribeAt, totalSumm] = (() => {
-													if (subscribedOnData) {
-														const { subscribeAt, totalSumm } = subscribedOnData;
+											const observer = async () => {
+												const chats = await $this.fetchChats(offset);
 
-														return [subscribeAt, totalSumm]
-													}
+												const { list, hasMore } = chats;
 
-													return [];
-												})();
+												const users = new Map();
 
-												return [
-													userId,
-													canReceiveChatMessage,
-													suggestedName,
-													displayName,
-													name,
-													username,
-													notice,
-													profileLink,
-													subscribeAt,
-													lastSeen,
-													totalSumm,
-													subscribedOnExpiredNow,
-													chatLink,
-													isRealPerformer,
-												];
-											}));
+												list.map(chat => {
+													users.set(chat.withUser.id, false);
+												});
 
-											hot.updateData(data);
+												await $this.getUsersByIds(users, true);
 
-											offset += 10;
+												const current = hot.getData();
 
-											if (!hasMore) {
-												wnd.alert('List loaded');
+												const data = current.concat([...users.values()].map(user => {
+													const {
+														id: userId,
+														canReceiveChatMessage,
+														displayName,
+														name,
+														username,
+														notice,
+														lastSeen,
+														subscribedOnExpiredNow,
+														isRealPerformer,
+														subscribedOnData,
+													} = user;
 
-												return;
-											}
+													const suggestedName = $this.getCleanName(displayName || name || username || "");
 
-											setTimeout(observer, 100);
+													const profileLink = `https://onlyfans.com/${username}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+
+													const [subscribeAt, totalSumm] = (() => {
+														if (subscribedOnData) {
+															const { subscribeAt, totalSumm } = subscribedOnData;
+
+															return [subscribeAt, totalSumm]
+														}
+
+														return [];
+													})();
+
+													return [
+														userId,
+														canReceiveChatMessage,
+														suggestedName,
+														displayName,
+														name,
+														username,
+														notice,
+														profileLink,
+														subscribeAt,
+														lastSeen,
+														totalSumm,
+														subscribedOnExpiredNow,
+														chatLink,
+														isRealPerformer,
+													];
+												}));
+
+												hot.updateData(data);
+
+												offset += 10;
+
+												if (!hasMore) {
+													wnd.alert('List loaded');
+
+													return;
+												}
+
+												setTimeout(observer, 100);
+											};
+
+											observer();
 										};
 
-										observer();
-									};
+										const container = document.createElement('div');
 
-									const container = document.createElement('div');
+										container.id = 'container';
 
-									container.id = 'container';
+										document.body.appendChild(container);
+									}
 
-									document.body.appendChild(container);
-								}
-
-								return true;
-							};
+									return true;
+								};
+							}
 						}
 					}
 				}
+
 				setTimeout(observer, 100);
 			};
 
