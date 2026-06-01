@@ -272,7 +272,6 @@ $spent_500: #BA55D3;
     bottom: 10px;
 }
 
-
 .m-mode-dark {
     .badge {
         background-color: var(--bg-color);
@@ -337,4 +336,8 @@ $spent_500: #BA55D3;
 .vault-media-purchased-icon {
     bottom: 36px !important;
     right: 4px !important;
+}
+
+[id="export_chat"] {
+    display: none !important;
 }

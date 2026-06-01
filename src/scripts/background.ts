@@ -1374,9 +1374,146 @@ async function inject(extensionRootUrl) {
 			}, 1 * 60 * 1000);
 		}
 
+		includeLists(args) {
+			const $this = this;
+
+
+		}
+
+		excludeLists(args) {
+			const $this = this;
+
+
+		}
+		resetLists(args) {
+			const $this = this;
+
+
+		}
+		includeFans(args) {
+			const $this = this;
+
+
+		}
+		excludeFans(args) {
+			const $this = this;
+
+
+		}
+		resetFans(args) {
+			const $this = this;
+
+
+		}
+		loadLists(args) {
+			const $this = this;
+
+
+		}
+		loadFans(args) {
+			const $this = this;
+
+
+		}
+		loadTmpl(args) {
+			const $this = this;
+
+			const chats__conversations: any = document.querySelector('.b-chats__conversations');
+
+			if (chats__conversations) {
+				const { __vue__: vue } = chats__conversations;
+
+				const { setDataSchedule } = vue;
+
+				const chat_footer = chats__conversations.querySelector('.m-chat-footer');
+
+				if (chat_footer) {
+					const { __vue__: vue_ } = chat_footer;
+
+					const { getMessageFromDraft } = vue_;
+
+					const draft = (() => {
+						const item = localStorage.getItem('MassDMTemplate');
+
+						if (item) {
+							return JSON.parse(item);
+						}
+
+						return false;
+					})();
+
+					if (draft) {
+						[vue, vue_].map(vue => {
+							Object.defineProperty(vue, 'needLoadDraft', {
+								writable: true,
+								enumerable: true,
+								configurable: true
+							});
+							Object.defineProperty(vue, 'draftMessage', {
+								writable: true,
+								enumerable: true,
+								configurable: true
+							});
+
+							vue.needLoadDraft = true;
+							vue.draftMessage = draft;
+						});
+
+						setDataSchedule();
+
+						getMessageFromDraft();
+
+						showToast('Template loaded');
+					} else {
+						showToast('No saved template');
+					}
+				}
+			}
+		}
+		saveTmpl(args) {
+			const $this = this;
+
+			const chats__conversations: any = document.querySelector('.b-chats__conversations');
+
+			if (chats__conversations) {
+				const { __vue__: vue } = chats__conversations;
+
+				const chat_footer = chats__conversations.querySelector('.m-chat-footer');
+
+				if (chat_footer) {
+					const { __vue__: vue } = chat_footer;
+
+					const { prepareDraftMessage } = vue;
+
+					const draft = prepareDraftMessage();
+
+					localStorage.setItem('MassDMTemplate', JSON.stringify(draft));
+
+					showToast('Template saved');
+				}
+			}
+		}
+
 		massDMPageHandler() {
 			const $this = this;
 
+			/**
+			 * Сторим функции в глобальную зону
+			 */
+			window['includeLists'] = (args) => { $this.includeLists(args) };
+			window['excludeLists'] = (args) => { $this.excludeLists(args) };
+			window['resetLists'] = (args) => { $this.resetLists(args) };
+			window['includeFans'] = (args) => { $this.includeFans(args) };
+			window['excludeFans'] = (args) => { $this.excludeFans(args) };
+			window['resetFans'] = (args) => { $this.resetFans(args) };
+			window['loadLists'] = (args) => { $this.loadLists(args) };
+			window['loadFans'] = (args) => { $this.loadFans(args) };
+			window['loadTmpl'] = (args) => { $this.loadTmpl(args) };
+			window['saveTmpl'] = (args) => { $this.saveTmpl(args) };
+
+			/**
+			 * Рендеринг кнопок
+			 */
 			const observer = async () => {
 				const { isChatSendPage } = $this.app;
 
@@ -1395,20 +1532,20 @@ async function inject(extensionRootUrl) {
 
 							tools.innerHTML = `
 							<div class="buttons-group">
-								<button class="g-btn m-rounded" onclick="includeLists()">Include lists</button>
-								<button class="g-btn m-rounded" onclick="excludeLists()">Exclude lists</button>
-								<button class="g-btn m-rounded onclick="resetLists()"">Reset lists</button>
+								<button class="g-btn m-rounded" onclick="includeLists(this)">Include lists</button>
+								<button class="g-btn m-rounded" onclick="excludeLists(this)">Exclude lists</button>
+								<button class="g-btn m-rounded" onclick="resetLists(this)"">Reset lists</button>
 							</div>
 							<div class="buttons-group">
-								<button class="g-btn m-rounded" onclick="includeFans()">Include fans</button>
-								<button class="g-btn m-rounded" onclick="excludeFans()">Exclude fans</button>
-								<button class="g-btn m-rounded" onclick="resetFans()">Reset fans</button>
+								<button class="g-btn m-rounded" onclick="includeFans(this)">Include fans</button>
+								<button class="g-btn m-rounded" onclick="excludeFans(this)">Exclude fans</button>
+								<button class="g-btn m-rounded" onclick="resetFans(this)">Reset fans</button>
 							</div>
 							<div class="buttons-group">
-								<button class="g-btn m-rounded" onclick="loadLists()">Load lists</button>
-								<button class="g-btn m-rounded" onclick="loadFans()">Load fans</button>
-								<button class="g-btn m-rounded" onclick="loadTmpl()">Load template</button>
-								<button class="g-btn m-rounded" onclick="saveTmpl()">Save template</button>
+								<button class="g-btn m-rounded" onclick="loadLists(this)">Load lists</button>
+								<button class="g-btn m-rounded" onclick="loadFans(this)">Load fans</button>
+								<button class="g-btn m-rounded" onclick="loadTmpl(this)">Load template</button>
+								<button class="g-btn m-rounded" onclick="saveTmpl(this)">Save template</button>
 							</div>`;
 						}
 					}
@@ -2382,6 +2519,47 @@ async function inject(extensionRootUrl) {
 	};
 
 	observer();
+
+	{
+		return;
+
+		const funcs = {};
+
+		const observer = () => {
+			const els = document.querySelectorAll('*');
+
+			els.forEach((el: any) => {
+				const { __vue__: vue } = el;
+
+				if (vue) {
+					const collect = (vue) => {
+						Object.keys(vue).map(key => {
+							const value = vue[key];
+
+							if (typeof value === 'function') {
+								funcs[key] = {
+									vue,
+									f: value
+								};
+							}
+						});
+
+						const { $children } = vue;
+
+						$children.map(collect);
+					};
+
+					collect(vue);
+
+					debugger;
+				}
+			});
+
+			setTimeout(observer, 100);
+		};
+
+		observer();
+	}
 }
 
 function tools() {
