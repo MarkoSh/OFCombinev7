@@ -1,30 +1,23 @@
 <div id="edit_bind" class="combine-modal" style="display: block">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="edit_bind" action="/" method="post">
+        <div class="modal-content wide">
+            <form id="set_fans" action="/" method="post">
                 <header class="modal-header">
                     <h4 class="modal-title">Set fans</h4>
                 </header>
-                <div class="modal-body">
-                    <fieldset>
+                <div class="modal-body cols">
+                    <fieldset class="col">
                         <div>
-                            <label for="hint">Hint</label>
-                            <input type="text" id="hint" name="hint" required placeholder="Hello %name"
-                                autocomplete="off" value="{HINT}">
+                            <label for="include">Include fans</label>
+                            <textarea id="include" name="include" rows="10" required
+                                placeholder="Include fans by ids"></textarea>
                         </div>
                     </fieldset>
-                    <fieldset>
+                    <fieldset class="col">
                         <div>
-                            <label for="data">Binds</label>
-                            <textarea id="data" name="data" rows="10" required
-                                placeholder="Two lines for separate, markers: %name %emoji %send %answer %like">{TEXTS}</textarea>
-                            <ul class="markers">
-                                <li><a href="#">%name</a></li>
-                                <li><a href="#">%emoji</a></li>
-                                <li><a href="#">%send</a></li>
-                                <li><a href="#">%answer</a></li>
-                                <li><a href="#">%like</a></li>
-                            </ul>
+                            <label for="exclude">Exclude fans</label>
+                            <textarea id="exclude" name="exclude" rows="10" required
+                                placeholder="Exclude fans by ids"></textarea>
                         </div>
                     </fieldset>
                 </div>
