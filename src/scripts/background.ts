@@ -528,7 +528,7 @@ async function inject(extensionRootUrl) {
 
 									const wnd = window.open(`about:blank#${listId_}`);
 
-									if (wnd) {										
+									if (wnd) {
 										const document = wnd.document;
 
 										document.title = title || listId_;
@@ -981,24 +981,36 @@ async function inject(extensionRootUrl) {
 			observer();
 		}
 
-		async copyMessage(text) {
-			showToast('Developing');
+		copyMessage(args) {
+			const $this = this;
 
-			return;
+			return new Promise(async (resolve, reject) => {
+				const chat__message = args.closest('.b-chat__message');
 
-			const pre = document.createElement('pre');
+				if (chat__message) {
+					const { __vue__: vue } = chat__message;
 
-			pre.innerHTML = decodeURIComponent(text);
+					const { message } = vue;
 
-			const textRaw = pre.innerText;
+					const { text } = message;
 
-			try {
-				await navigator.clipboard.writeText(textRaw);
+					const htmlBlob = new Blob([text], { type: "text/html" });
 
-				showToast('Copied!');
-			} catch (error) {
-				showToast('Clipboard API failed!');
-			}
+					const clipboardItem = new ClipboardItem({
+						"text/html": htmlBlob,
+					});
+
+					try {
+						await navigator.clipboard.write([clipboardItem]);
+
+						showToast(`Message successfully copied!`);
+					} catch (error) {
+						showToast(`Failed to copy rich text: ${error}`);
+					}
+
+					resolve(true);
+				}
+			});
 		}
 
 		downloadMedia(target) {
@@ -1638,7 +1650,7 @@ async function inject(extensionRootUrl) {
 
 								tools.innerHTML += `
 									<a href="#" onclick="replyToMessage(${messageId})" title="Reply">↪️</a>
-									<a href="#" onclick="copyMessage(this, '')" title="Copy">📋️</a>
+									<a href="#" onclick="copyMessage(this)" title="Copy">📋️</a>
 									<a href="#" onclick="translateMessage(this, '')" title="Translate">💱</a>
 									<a href="#" onclick="deleteMessages({chatId: ${chatId}, messageId: ${messageId}})" title="Unsend">❌</a>`;
 							} else {
@@ -1646,7 +1658,7 @@ async function inject(extensionRootUrl) {
 									<a href="/my/chats/chat/${chatId}/?firstId=${messageId}" title="Link" target="_blank">🔗</a>
 									<a href="#" onclick="toggleLikeMessage({messageId: ${messageId}, withUserId: ${userId}})" title="Like">❤️</a>
 									<a href="#" onclick="replyToMessage(${messageId})" title="Reply">↪️</a>
-									<a href="#" onclick="copyMessage(this, '')" title="Copy">📋️</a>`;
+									<a href="#" onclick="copyMessage(this)" title="Copy">📋️</a>`;
 
 								if (hasMedia) {
 									tools.innerHTML += `
