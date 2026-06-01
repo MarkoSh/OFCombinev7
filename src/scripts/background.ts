@@ -1387,7 +1387,16 @@ async function inject(extensionRootUrl) {
 		resetLists(args) {
 			const $this = this;
 
+			const chats__conversations: any = document.querySelector('.b-chats__conversations');
 
+			if (chats__conversations) {
+				const { __vue__: vue } = chats__conversations;
+
+				vue.listIds = [];
+				vue.excludeListIds = [];
+
+				showToast('Lists reset');
+			}
 		}
 		includeFans(args) {
 			const $this = this;
@@ -1402,7 +1411,16 @@ async function inject(extensionRootUrl) {
 		resetFans(args) {
 			const $this = this;
 
+			const chats__conversations: any = document.querySelector('.b-chats__conversations');
 
+			if (chats__conversations) {
+				const { __vue__: vue } = chats__conversations;
+
+				vue.userIds = [];
+				vue.excludedUsersIds = [];
+
+				showToast('Users reset');
+			}
 		}
 		loadLists(args) {
 			const $this = this;
@@ -1639,18 +1657,16 @@ async function inject(extensionRootUrl) {
 
 							tools.innerHTML = `
 							<div class="buttons-group">
-								<button class="g-btn m-rounded" onclick="includeLists(this)">Include lists</button>
-								<button class="g-btn m-rounded" onclick="excludeLists(this)">Exclude lists</button>
+								<button class="g-btn m-rounded" onclick="includeLists(this)">Set lists</button>
+								<button class="g-btn m-rounded" onclick="loadLists(this)">Load lists</button>
 								<button class="g-btn m-rounded" onclick="resetLists(this)"">Reset lists</button>
 							</div>
 							<div class="buttons-group">
-								<button class="g-btn m-rounded" onclick="includeFans(this)">Include fans</button>
-								<button class="g-btn m-rounded" onclick="excludeFans(this)">Exclude fans</button>
+								<button class="g-btn m-rounded" onclick="includeFans(this)">Set fans</button>
+								<button class="g-btn m-rounded" onclick="loadFans(this)">Load fans</button>
 								<button class="g-btn m-rounded" onclick="resetFans(this)">Reset fans</button>
 							</div>
 							<div class="buttons-group">
-								<button class="g-btn m-rounded" onclick="loadLists(this)">Load lists</button>
-								<button class="g-btn m-rounded" onclick="loadFans(this)">Load fans</button>
 								<button class="g-btn m-rounded" onclick="loadTmpl(this)">Load template</button>
 								<button class="g-btn m-rounded" onclick="saveTmpl(this)">Save template</button>
 							</div>`;
