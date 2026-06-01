@@ -1379,7 +1379,6 @@ async function inject(extensionRootUrl) {
 
 
 		}
-
 		excludeLists(args) {
 			const $this = this;
 
@@ -1408,12 +1407,120 @@ async function inject(extensionRootUrl) {
 		loadLists(args) {
 			const $this = this;
 
+			const chats__conversations: any = document.querySelector('.b-chats__conversations');
 
+			if (chats__conversations) {
+				const { __vue__: vue } = chats__conversations;
+
+				const { setDataSchedule } = vue;
+
+				const chat_footer = chats__conversations.querySelector('.m-chat-footer');
+
+				if (chat_footer) {
+					const { __vue__: vue_ } = chat_footer;
+
+					const { getMessageFromDraft } = vue_;
+
+					const draft = (() => {
+						const item = localStorage.getItem('MassDMTemplate');
+
+						if (item) {
+							return JSON.parse(item);
+						}
+
+						return false;
+					})();
+
+					if (draft) {
+						const { listIds, excludeListIds } = draft;
+
+						[vue, vue_].map(vue => {
+							Object.defineProperty(vue, 'needLoadDraft', {
+								writable: true,
+								enumerable: true,
+								configurable: true
+							});
+							Object.defineProperty(vue, 'draftMessage', {
+								writable: true,
+								enumerable: true,
+								configurable: true
+							});
+
+							vue.needLoadDraft = true;
+							vue.draftMessage = {
+								listIds,
+								excludeListIds,
+							};
+						});
+
+						setDataSchedule();
+
+						showToast('Lists loaded');
+					} else {
+						showToast('No saved template');
+					}
+				}
+			}
 		}
 		loadFans(args) {
 			const $this = this;
 
+			const chats__conversations: any = document.querySelector('.b-chats__conversations');
 
+			if (chats__conversations) {
+				const { __vue__: vue } = chats__conversations;
+
+				const { setDataSchedule } = vue;
+
+				const chat_footer = chats__conversations.querySelector('.m-chat-footer');
+
+				if (chat_footer) {
+					const { __vue__: vue_ } = chat_footer;
+
+					const { getMessageFromDraft } = vue_;
+
+					const draft = (() => {
+						const item = localStorage.getItem('MassDMTemplate');
+
+						if (item) {
+							return JSON.parse(item);
+						}
+
+						return false;
+					})();
+
+					if (draft) {
+						const { userIds, excludedUsersIds } = draft;
+
+						debugger;
+
+						[vue, vue_].map(vue => {
+							Object.defineProperty(vue, 'needLoadDraft', {
+								writable: true,
+								enumerable: true,
+								configurable: true
+							});
+							Object.defineProperty(vue, 'draftMessage', {
+								writable: true,
+								enumerable: true,
+								configurable: true
+							});
+
+							vue.needLoadDraft = true;
+							vue.draftMessage = {
+								userIds,
+								excludedUsersIds,
+							};
+						});
+
+						setDataSchedule();
+
+						showToast('Users loaded');
+					} else {
+						showToast('No saved template');
+					}
+				}
+			}
 		}
 		loadTmpl(args) {
 			const $this = this;
