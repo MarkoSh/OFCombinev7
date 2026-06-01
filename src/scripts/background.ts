@@ -998,9 +998,17 @@ async function inject(extensionRootUrl) {
 
 					const { text } = message;
 
+					const div = document.createElement('div');
+
+					div.innerHTML = text;
+
+					const textContent = div.textContent.trim();
+
+					const textPlain = new Blob([textContent], { type: "text/plain" });
 					const htmlBlob = new Blob([text], { type: "text/html" });
 
 					const clipboardItem = new ClipboardItem({
+						"text/plain": textPlain,
 						"text/html": htmlBlob,
 					});
 
