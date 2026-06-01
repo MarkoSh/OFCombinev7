@@ -226,6 +226,10 @@ $spent_500: #BA55D3;
         width: 80%; /* Could be more or less, depending on screen size */
         max-width: 460px;
         animation: modalIn .2s ease-in;
+
+        &.wide {
+            max-width: 560px;
+        }
     }
 
     .modal-body {
@@ -244,6 +248,12 @@ $spent_500: #BA55D3;
         textarea {
             padding-top: 10px;
             padding-bottom: 10px;
+        }
+
+        &.cols {
+            display: flex;
+            gap: 10px;
+            flex-direction: row;
         }
     }
 

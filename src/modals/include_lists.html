@@ -1,0 +1,35 @@
+<div id="edit_bind" class="combine-modal" style="display: block">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content wide">
+            <form id="set_lists" action="/" method="post">
+                <header class="modal-header">
+                    <h4 class="modal-title">Set lists</h4>
+                </header>
+                <div class="modal-body cols">
+                    <fieldset class="col">
+                        <div>
+                            <label for="data">Include lists</label>
+                            <textarea id="data" name="data" rows="10" required
+                                placeholder="Include lists by ids"></textarea>
+                            <ul class="lists">
+                            </ul>
+                        </div>
+                    </fieldset>
+                    <fieldset class="col">
+                        <div>
+                            <label for="data">Exclude lists</label>
+                            <textarea id="data" name="data" rows="10" required
+                                placeholder="Exclude lists by ids"></textarea>
+                            <ul class="lists">
+                            </ul>
+                        </div>
+                    </fieldset>
+                </div>
+                <footer class="modal-footer">
+                    <button type="reset" class="g-btn m-flat m-btn-gaps m-reset-width"> Reset </button>
+                    <button type="submit" class="g-btn m-flat m-btn-gaps m-reset-width"> Save </button>
+                </footer>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,38 @@
+<div id="edit_bind" class="combine-modal" style="display: block">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="edit_bind" action="/" method="post">
+                <header class="modal-header">
+                    <h4 class="modal-title">Set fans</h4>
+                </header>
+                <div class="modal-body">
+                    <fieldset>
+                        <div>
+                            <label for="hint">Hint</label>
+                            <input type="text" id="hint" name="hint" required placeholder="Hello %name"
+                                autocomplete="off" value="{HINT}">
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <div>
+                            <label for="data">Binds</label>
+                            <textarea id="data" name="data" rows="10" required
+                                placeholder="Two lines for separate, markers: %name %emoji %send %answer %like">{TEXTS}</textarea>
+                            <ul class="markers">
+                                <li><a href="#">%name</a></li>
+                                <li><a href="#">%emoji</a></li>
+                                <li><a href="#">%send</a></li>
+                                <li><a href="#">%answer</a></li>
+                                <li><a href="#">%like</a></li>
+                            </ul>
+                        </div>
+                    </fieldset>
+                </div>
+                <footer class="modal-footer">
+                    <button type="reset" class="g-btn m-flat m-btn-gaps m-reset-width"> Reset </button>
+                    <button type="submit" class="g-btn m-flat m-btn-gaps m-reset-width"> Save </button>
+                </footer>
+            </form>
+        </div>
+    </div>
+</div>

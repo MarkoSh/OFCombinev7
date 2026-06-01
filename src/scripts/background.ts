@@ -928,7 +928,11 @@ async function inject(extensionRootUrl) {
 		fetchModals() {
 			const $this = this;
 
-			const modals = ['edit_bind'];
+			const modals = [
+				'edit_bind',
+				'include_lists',
+				'include_fans',
+			];
 
 			modals.map(async (modal) => {
 				const link = `${extensionRootUrl}modals/${modal}.html`;
@@ -1377,12 +1381,15 @@ async function inject(extensionRootUrl) {
 		includeLists(args) {
 			const $this = this;
 
+			const div = document.createElement('div');
 
-		}
-		excludeLists(args) {
-			const $this = this;
+			div.innerHTML = $this.modals['include_lists'];;
 
+			const modal = <HTMLElement>div.firstChild;
 
+			if (modal) {
+				document.body.appendChild(modal);
+			}
 		}
 		resetLists(args) {
 			const $this = this;
@@ -1401,12 +1408,15 @@ async function inject(extensionRootUrl) {
 		includeFans(args) {
 			const $this = this;
 
+			const div = document.createElement('div');
 
-		}
-		excludeFans(args) {
-			const $this = this;
+			div.innerHTML = $this.modals['include_fans'];;
 
+			const modal = <HTMLElement>div.firstChild;
 
+			if (modal) {
+				document.body.appendChild(modal);
+			}
 		}
 		resetFans(args) {
 			const $this = this;
@@ -1626,10 +1636,8 @@ async function inject(extensionRootUrl) {
 			 * Сторим функции в глобальную зону
 			 */
 			window['includeLists'] = (args) => { $this.includeLists(args) };
-			window['excludeLists'] = (args) => { $this.excludeLists(args) };
 			window['resetLists'] = (args) => { $this.resetLists(args) };
 			window['includeFans'] = (args) => { $this.includeFans(args) };
-			window['excludeFans'] = (args) => { $this.excludeFans(args) };
 			window['resetFans'] = (args) => { $this.resetFans(args) };
 			window['loadLists'] = (args) => { $this.loadLists(args) };
 			window['loadFans'] = (args) => { $this.loadFans(args) };
@@ -1692,6 +1700,8 @@ async function inject(extensionRootUrl) {
 							const { fetchUsersListsData } = vue;
 
 							new Promise<void>((resolve, reject) => {
+								showToast('Lists loading...');
+
 								const observer = async () => {
 									const { usersListsOffset } = vue;
 
