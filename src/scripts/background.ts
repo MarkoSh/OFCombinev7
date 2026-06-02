@@ -269,6 +269,8 @@ async function inject(extensionRootUrl) {
 
 			$this.chatHandler();
 
+			$this.notificationsUsersTable();
+
 			$this.chatsUsersTable();
 
 			$this.listUsersTable();
@@ -375,7 +377,26 @@ async function inject(extensionRootUrl) {
 													'sentCount',
 													'viewedCount',
 													'purchasedCount',
+													'dateScheduleTo',
+													'schedule',
 													'forwardLink',
+												],
+												columns: [
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{
+														type: 'checkbox',
+														className: 'htCenter htMiddle',
+													},
+													{},
 												],
 												columnSorting: true,
 												filters: true,
@@ -400,6 +421,14 @@ async function inject(extensionRootUrl) {
 											const startDate = joinDate__date;
 
 											let endDate = new Date();
+
+											const scheduleDate = new Date();
+
+											scheduleDate.setDate(scheduleDate.getDate() + 1);
+
+											scheduleDate.setHours(1);
+											scheduleDate.setMinutes(6);
+											scheduleDate.setSeconds(0);
 
 											const observer = async () => {
 												const response = await $this.fetchEngagementMessages('group', startDate, endDate);
@@ -437,7 +466,7 @@ async function inject(extensionRootUrl) {
 														purchasedCount,
 													} = item;
 
-													return [
+													const result = [
 														id,
 														date,
 														50 < rawText.length ? `${rawText.slice(0, 50)}...` : rawText,
@@ -447,8 +476,14 @@ async function inject(extensionRootUrl) {
 														sentCount,
 														viewedCount,
 														purchasedCount,
+														$this.formatDateTime(scheduleDate),
+														true,
 														`https://onlyfans.com/my/chats/send?scheduleMessageId=${id}#forward`,
 													];
+
+													scheduleDate.setHours(scheduleDate.getHours() + 3);
+
+													return result;
 												}));
 
 												hot.updateData(data);
@@ -810,6 +845,22 @@ async function inject(extensionRootUrl) {
 													'chatLink',
 													'isRealPerformer',
 												],
+												columns: [
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+												],
 												columnSorting: true,
 												filters: true,
 												dropdownMenu: true,
@@ -1002,6 +1053,22 @@ async function inject(extensionRootUrl) {
 													'chatLink',
 													'isRealPerformer',
 												],
+												columns: [
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+												],
 												columnSorting: true,
 												filters: true,
 												dropdownMenu: true,
@@ -1125,6 +1192,239 @@ async function inject(extensionRootUrl) {
 			};
 
 			observer();
+		}
+
+		notificationsUsersTable() {
+			const $this = this;
+
+			const observer = () => {
+				const { name } = $this.app.route.to;
+
+				if (['Notifications', 'NotificationsByType'].includes(name)) {
+					const btns_group = document.querySelector('.b-btns-group.m-notifications-user-search');
+
+					if (btns_group) {
+						const btn_export = btns_group.querySelector('[id="export"]');
+
+						if (!btn_export) {
+							const btn = btns_group.querySelector('[href="/my/settings/notifications/"]');
+
+							if (btn) {
+								const btn_export = <HTMLAnchorElement>btn.cloneNode(true);
+
+								btn_export.href = '#';
+
+								btn_export.id = 'export';
+
+								btn_export.setAttribute('aria-label', 'Export notifications users');
+
+								btn_export.innerHTML = btn_export.innerHTML.replaceAll('icon-settings', 'icon-download');
+
+								btns_group.appendChild(btn_export);
+
+								btn_export.onclick = e => {
+									e.preventDefault();
+
+									const { params } = $this.app.route.to;
+
+									const { type } = params;
+
+									const wnd = window.open('about:blank#notifications');
+
+									if (wnd) {
+										const document = wnd.document;
+
+										document.title = `Notifications${type ? ` - ${type}` : ''}`;
+
+										const script = <HTMLScriptElement>document.createElement('script');
+
+										script.type = 'text/javascript';
+
+										script.src = 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
+
+										document.head.appendChild(script);
+
+										script.onload = async (e) => {
+											const Handsontable = wnd['Handsontable'];
+
+											const hot = new Handsontable(container, {
+												data: [],
+												colHeaders: [
+													'id',
+													'canReceiveChatMessage',
+													'suggestedName',
+													'displayName',
+													'name',
+													'username',
+													'notice',
+													'profileLink',
+													'subscribeAt',
+													'lastSeen',
+													'totalSum',
+													'expired',
+													'chatLink',
+													'isRealPerformer',
+												],
+												columns: [
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+													{},
+												],
+												columnSorting: true,
+												filters: true,
+												dropdownMenu: true,
+												rowHeaders: true,
+												height: 'auto',
+												autoWrapRow: true,
+												autoWrapCol: true,
+												licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
+											});
+
+											hot.addHook('afterChange', (rows, amount) => {
+												if (rows) {
+													rows.map(row => {
+														const [rowNum, _, __, value] = row;
+
+														const data = hot.getDataAtRow(rowNum);
+
+														const userId = data[0];
+														const displayName = data[3];
+
+														$this.setName(userId, displayName);
+													});
+												}
+											});
+
+											let fromId = 0;
+
+											const observer = async () => {
+												const notifications = await $this.fetchNotifications(fromId, type);
+
+												const { list, hasMore } = notifications;
+
+												const users = new Map();
+
+												list.map(notification => {
+													const { user } = notification;
+
+													const { id: userId } = user;
+
+													users.set(userId, false);
+												});
+
+												await $this.getUsersByIds(users, true);
+
+												const current = hot.getData();
+
+												const data = current.concat([...users.values()].map(user => {
+													const {
+														id: userId,
+														canReceiveChatMessage,
+														displayName,
+														name,
+														username,
+														notice,
+														lastSeen,
+														subscribedOnExpiredNow,
+														isRealPerformer,
+														subscribedOnData,
+													} = user;
+
+													const suggestedName = $this.getCleanName(displayName || name || username || "");
+
+													const profileLink = `https://onlyfans.com/${username}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+
+													const [subscribeAt, totalSumm] = (() => {
+														if (subscribedOnData) {
+															const { subscribeAt, totalSumm } = subscribedOnData;
+
+															return [subscribeAt, totalSumm]
+														}
+
+														return [];
+													})();
+
+													return [
+														userId,
+														canReceiveChatMessage,
+														suggestedName,
+														displayName,
+														name,
+														username,
+														notice,
+														profileLink,
+														subscribeAt,
+														lastSeen,
+														totalSumm,
+														subscribedOnExpiredNow,
+														chatLink,
+														isRealPerformer,
+													];
+												}));
+
+												hot.updateData(data);
+
+												const notification = list.at(-1);
+
+												const { id: notificationId } = notification;
+
+												fromId = notificationId;
+
+												if (!hasMore) {
+													wnd.alert('Notifications loaded');
+
+													return;
+												}
+
+												wnd.alert('Notifications loaded');
+											};
+
+											observer();
+										};
+
+										const container = document.createElement('div');
+
+										container.id = 'container';
+
+										document.body.appendChild(container);
+									}
+
+									return true;
+								};
+							}
+						}
+					}
+				}
+
+				setTimeout(observer, 100);
+			};
+
+			observer();
+		}
+
+		async fetchNotifications(fromId: number, type: string = '') {
+			const $this = this;
+
+			const BASE_PATH = `/api2/v2/users/notifications`;
+			const PARAMS = `limit=100&skip_users=all&format=infinite`;
+
+			const path = `${BASE_PATH}?${PARAMS}${type ? `&type=${type}` : ''}${fromId ? `&fromId=${fromId}` : ''}`;
+
+			const response = await queue.add(async () => await OFSign.get(path));
+
+			return await response.json();
 		}
 
 		setName(userId: string, displayName: string) {
