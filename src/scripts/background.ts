@@ -3292,6 +3292,36 @@ async function inject(extensionRootUrl) {
 
 	observer();
 
+	window.addEventListener('keydown', (e: KeyboardEvent) => {
+		const { shiftKey } = e;
+
+		window['shiftKey'] = shiftKey;
+	});
+
+	window.addEventListener('keyup', (e: KeyboardEvent) => {
+		const { shiftKey } = e;
+
+		window['shiftKey'] = shiftKey;
+	});
+
+	{
+		const observer = () => {
+			const export_chat = document.querySelector('[id="export_chat"]');
+
+			if (export_chat) {
+				if (window['shiftKey']) {
+					export_chat.classList.add('show');
+				} else {
+					export_chat.classList.remove('show');
+				}
+			}
+
+			setTimeout(observer, 100);
+		};
+
+		observer();
+	}
+
 	{
 		return;
 

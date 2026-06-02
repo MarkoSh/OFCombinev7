@@ -348,6 +348,6 @@ $spent_500: #BA55D3;
     right: 4px !important;
 }
 
-[id="export_chat"] {
+[id="export_chat"]:not(.show) {
     display: none !important;
 }
