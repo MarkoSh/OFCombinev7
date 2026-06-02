@@ -245,7 +245,7 @@ async function inject(extensionRootUrl) {
 
 			$this.init();
 
-			showToast('Injected');
+			$this.showToast('Injected');
 		}
 
 		init() {
@@ -1015,9 +1015,9 @@ async function inject(extensionRootUrl) {
 					try {
 						await navigator.clipboard.write([clipboardItem]);
 
-						showToast(`Message successfully copied!`);
+						$this.showToast(`Message successfully copied!`);
 					} catch (error) {
-						showToast(`Failed to copy rich text: ${error}`);
+						$this.showToast(`Failed to copy rich text: ${error}`);
 					}
 
 					resolve(true);
@@ -1026,6 +1026,8 @@ async function inject(extensionRootUrl) {
 		}
 
 		downloadMedia(target) {
+			const $this = this;
+
 			const chat_message = target.closest('[at-attr="chat_message"]');
 
 			const { __vue__: vue } = chat_message;
@@ -1047,7 +1049,7 @@ async function inject(extensionRootUrl) {
 			});
 
 			if (isDrmOn) {
-				showToast(`It's under DRM protection`);
+				$this.showToast(`It's under DRM protection`);
 
 				return;
 			}
@@ -1076,7 +1078,9 @@ async function inject(extensionRootUrl) {
 		}
 
 		translateMessage(args) {
-			showToast('Developing');
+			const $this = this;
+
+			$this.showToast('Developing');
 
 			return;
 		}
@@ -1410,7 +1414,7 @@ async function inject(extensionRootUrl) {
 				vue.listIds = [];
 				vue.excludeListIds = [];
 
-				showToast('Lists reset');
+				$this.showToast('Lists reset');
 			}
 		}
 		includeFans(args) {
@@ -1437,7 +1441,7 @@ async function inject(extensionRootUrl) {
 				vue.userIds = [];
 				vue.excludedUsersIds = [];
 
-				showToast('Users reset');
+				$this.showToast('Users reset');
 			}
 		}
 		loadLists(args) {
@@ -1491,9 +1495,9 @@ async function inject(extensionRootUrl) {
 
 						setDataSchedule();
 
-						showToast('Lists loaded');
+						$this.showToast('Lists loaded');
 					} else {
-						showToast('No saved template');
+						$this.showToast('No saved template');
 					}
 				}
 			}
@@ -1551,9 +1555,9 @@ async function inject(extensionRootUrl) {
 
 						setDataSchedule();
 
-						showToast('Users loaded');
+						$this.showToast('Users loaded');
 					} else {
-						showToast('No saved template');
+						$this.showToast('No saved template');
 					}
 				}
 			}
@@ -1606,9 +1610,9 @@ async function inject(extensionRootUrl) {
 
 						getMessageFromDraft();
 
-						showToast('Template loaded');
+						$this.showToast('Template loaded');
 					} else {
-						showToast('No saved template');
+						$this.showToast('No saved template');
 					}
 				}
 			}
@@ -1632,7 +1636,7 @@ async function inject(extensionRootUrl) {
 
 					localStorage.setItem('MassDMTemplate', JSON.stringify(draft));
 
-					showToast('Template saved');
+					$this.showToast('Template saved');
 				}
 			}
 		}
@@ -1708,7 +1712,7 @@ async function inject(extensionRootUrl) {
 							const { fetchUsersListsData } = vue;
 
 							new Promise<void>((resolve, reject) => {
-								showToast('Lists loading...');
+								$this.showToast('Lists loading...');
 
 								const observer = async () => {
 									const { usersListsOffset } = vue;
@@ -1719,7 +1723,7 @@ async function inject(extensionRootUrl) {
 										const { usersListsHasMore } = vue;
 
 										if (!usersListsHasMore) {
-											showToast('Lists loaded');
+											$this.showToast('Lists loaded');
 
 											resolve();
 
