@@ -324,12 +324,202 @@ async function inject(extensionRootUrl) {
 							}
 						}
 					});
+
+					const btns_group = document.querySelector('.b-btns-group.m-move-right');
+
+					if (btns_group) {
+						const export_ppvs = btns_group.querySelector('[id="export_ppvs"]');
+
+						if (!export_ppvs) {
+							const support = btns_group.querySelector('[href="/my/statements/support"]');
+
+							if (support) {
+								const export_ppvs = <HTMLAnchorElement>support.cloneNode(true);
+
+								export_ppvs.id = 'export_ppvs';
+
+								export_ppvs.innerHTML = export_ppvs.innerHTML.replace(/icon\-support/g, 'icon-download');
+
+								support.after(export_ppvs);
+
+								export_ppvs.onclick = e => {
+									e.preventDefault();
+
+									const wnd = window.open(`about:blank#ppvs`);
+
+									if (wnd) {
+										const document = wnd.document;
+
+										document.title = 'PPVs';
+
+										const script = <HTMLScriptElement>document.createElement('script');
+
+										script.type = 'text/javascript';
+
+										script.src = 'https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.js';
+
+										document.head.appendChild(script);
+
+										script.onload = async (e) => {
+											const Handsontable = wnd['Handsontable'];
+
+											const hot = new Handsontable(container, {
+												data: [],
+												colHeaders: [
+													'id',
+													'date',
+													'rawText',
+													'isFree',
+													'isCanceled',
+													'price',
+													'sentCount',
+													'viewedCount',
+													'purchasedCount',
+													'forwardLink',
+												],
+												columnSorting: true,
+												filters: true,
+												dropdownMenu: true,
+												rowHeaders: true,
+												height: 'auto',
+												autoWrapRow: true,
+												autoWrapCol: true,
+												licenseKey: 'non-commercial-and-evaluation' // for non-commercial use only
+											});
+
+											const { authUser } = $this.app;
+
+											const { joinDate } = authUser;
+
+											const joinDate__date = new Date(joinDate);
+
+											joinDate__date.setHours(0);
+											joinDate__date.setMinutes(0);
+											joinDate__date.setSeconds(0);
+
+											const startDate = joinDate__date;
+
+											let endDate = new Date();
+
+											const observer = async () => {
+												const response = await $this.fetchEngagementMessages('group', startDate, endDate);
+
+												const { hasMore, items } = response;
+
+												const item = items.at(-1);
+
+												const { date } = item;
+
+												endDate = new Date(date);
+
+												const filtered = new Map();
+
+												items.map((item) => {
+													const { rawText } = item;
+
+													filtered.set(rawText ? rawText.slice(0, 50) : Math.random(), item);
+												});
+
+												const values = [...filtered.values()];
+
+												const current = hot.getData();
+
+												const data = current.concat(values.map(item => {
+													const {
+														id,
+														date,
+														rawText,
+														isFree,
+														isCanceled,
+														price,
+														sentCount,
+														viewedCount,
+														purchasedCount,
+													} = item;
+
+													return [
+														id,
+														date,
+														50 < rawText.length ? `${rawText.slice(0, 50)}...` : rawText,
+														isFree,
+														isCanceled,
+														price,
+														sentCount,
+														viewedCount,
+														purchasedCount,
+														`https://onlyfans.com/my/chats/send?scheduleMessageId=${id}#forward`,
+													];
+												}));
+
+												hot.updateData(data);
+
+												if (!hasMore) {
+													wnd.alert('PPVs loaded');
+
+													return;
+												}
+
+												wnd.alert('PPVs loaded');
+
+												// setTimeout(observer, 100);
+											};
+
+											observer();
+										};
+
+										const container = document.createElement('div');
+
+										container.id = 'container';
+
+										document.body.appendChild(container);
+									}
+
+									return true;
+								};
+							}
+						}
+					}
 				}
 
 				setTimeout(observer, 100);
 			};
 
 			observer();
+		}
+
+		formatDateTime(date) {
+			const formatter = new Intl.DateTimeFormat('en-US', {
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit',
+				hour12: false // Ensures 24-hour format (HH)
+			});
+
+			// Map parts array into a clean key-value object
+			const parts: any = formatter.formatToParts(date).reduce((acc, part) => {
+				acc[part.type] = part.value;
+				return acc;
+			}, {});
+
+			// Construct the target string structure
+			return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`;
+		}
+
+		async fetchEngagementMessages(type: string = 'group', startDate: Date, endDate: Date) {
+			const $this = this;
+
+			const BASE_PATH = `/api2/v2/users/me/stats/messages/${type}`;
+
+			const PARAMS = `startDate=${encodeURI($this.formatDateTime(startDate))}&endDate=${encodeURI($this.formatDateTime(endDate))}&limit=100`;
+
+			const path = `${BASE_PATH}?${PARAMS}`;
+
+			const response = await queue.add(async () => await OFSign.get(path));
+
+			return await response.json();
 		}
 
 		notoficationsHandler() {
@@ -1451,14 +1641,56 @@ async function inject(extensionRootUrl) {
 		includeLists(args) {
 			const $this = this;
 
-			const div = document.createElement('div');
+			const chats__conversations: any = document.querySelector('.b-chats__conversations');
 
-			div.innerHTML = $this.modals['include_lists'];;
+			if (chats__conversations) {
+				const { __vue__: vue } = chats__conversations;
 
-			const modal = <HTMLElement>div.firstChild;
+				const { listIds, excludeListIds } = vue;
 
-			if (modal) {
-				document.body.appendChild(modal);
+				const div = document.createElement('div');
+
+				div.innerHTML = $this.modals['include_lists']
+
+				div.innerHTML = div.innerHTML.replace(/{LISTIDS}/g, listIds.join("\n"));
+				div.innerHTML = div.innerHTML.replace(/{EXCLUIDEDLISTIDS}/g, excludeListIds.join("\n"));
+
+				const modal = <HTMLElement>div.firstChild;
+
+				if (modal) {
+					document.body.appendChild(modal);
+
+					const form = modal.querySelector('form');
+
+					if (form) {
+						form.onsubmit = e => {
+							e.preventDefault();
+
+							const formData = (() => {
+								const formData = new FormData(form);
+
+								const obj: any = Object.fromEntries(formData.entries());
+
+								obj.exclude = [...new Set(obj.exclude.trim().split("\n").filter(row => row))];
+
+								const set = new Set(obj.exclude);
+
+								obj.include = obj.include.trim().split("\n").filter(row => row);
+
+								obj.include = [...new Set(obj.include.filter(item => !set.has(item)))];
+
+								return obj
+							})();
+
+							vue.listIds = formData.include;
+							vue.excludeListIds = formData.exclude;
+
+							modal.remove();
+
+							return true;
+						};
+					}
+				}
 			}
 		}
 		resetLists(args) {
@@ -1478,14 +1710,56 @@ async function inject(extensionRootUrl) {
 		includeFans(args) {
 			const $this = this;
 
-			const div = document.createElement('div');
+			const chats__conversations: any = document.querySelector('.b-chats__conversations');
 
-			div.innerHTML = $this.modals['include_fans'];;
+			if (chats__conversations) {
+				const { __vue__: vue } = chats__conversations;
 
-			const modal = <HTMLElement>div.firstChild;
+				const { userIds, excludedUsersIds } = vue;
 
-			if (modal) {
-				document.body.appendChild(modal);
+				const div = document.createElement('div');
+
+				div.innerHTML = $this.modals['include_fans'];
+
+				div.innerHTML = div.innerHTML.replace(/{USERIDS}/g, userIds.join("\n"));
+				div.innerHTML = div.innerHTML.replace(/{EXCLUIDEDUSERIDS}/g, excludedUsersIds.join("\n"));
+
+				const modal = <HTMLElement>div.firstChild;
+
+				if (modal) {
+					document.body.appendChild(modal);
+
+					const form = modal.querySelector('form');
+
+					if (form) {
+						form.onsubmit = e => {
+							e.preventDefault();
+
+							const formData = (() => {
+								const formData = new FormData(form);
+
+								const obj: any = Object.fromEntries(formData.entries());
+
+								obj.exclude = [...new Set(obj.exclude.trim().split("\n").filter(row => row))];
+
+								const set = new Set(obj.exclude);
+
+								obj.include = obj.include.trim().split("\n").filter(row => row);
+
+								obj.include = [...new Set(obj.include.filter(item => !set.has(item)))];
+
+								return obj
+							})();
+
+							vue.userIds = formData.include;
+							vue.excludedUsersIds = formData.exclude;
+
+							modal.remove();
+
+							return true;
+						};
+					}
+				}
 			}
 		}
 		resetFans(args) {
@@ -2094,15 +2368,10 @@ async function inject(extensionRootUrl) {
 
 										const div = document.createElement('div');
 
-										div.innerHTML = (() => {
-											const text = $this.modals['edit_bind'];
+										div.innerHTML = $this.modals['edit_bind'];
 
-											let replaced = text.replace(/{HINT}/g, hint);
-
-											replaced = replaced.replace(/{TEXTS}/g, data.join("\n\n"));
-
-											return replaced;
-										})();
+										div.innerHTML = div.innerHTML.replace(/{HINT}/g, hint);
+										div.innerHTML = div.innerHTML.replace(/{TEXTS}/g, data.join("\n\n"));
 
 										const modal = <HTMLElement>div.firstChild;
 
