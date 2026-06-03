@@ -622,9 +622,9 @@ async function inject(extensionRootUrl) {
 						};
 					}
 
-					const { isChatPage } = $this.app;
+					const { name } = $this.app.route.to;
 
-					if (isChatPage) {
+					if ('Chat' == name) {
 						const post__actions__btns = chat_footer.querySelector('.b-make-post__actions__btns');
 
 						if (post__actions__btns) {
@@ -1663,9 +1663,9 @@ async function inject(extensionRootUrl) {
 			const observer = async () => {
 				const card = <HTMLElement>document.querySelector('[id="card"]');
 
-				const { isChatPage } = $this.app;
+				const { name } = $this.app.route.to;
 
-				if (isChatPage) {
+				if ('Chat' == name) {
 					const userId = location.pathname.match(/(\d+)/)?.[1] || null;
 
 					if (userId) {
@@ -1754,6 +1754,14 @@ async function inject(extensionRootUrl) {
 											});
 
 											const last_read_date = <HTMLAnchorElement>document.querySelector('[id="last_read_date"]');
+
+											if (last_read_date) {
+												last_read_date.onclick = e => {
+													e.preventDefault();
+
+													return true;
+												};
+											}
 
 											if (isRead) {
 												const { id: messageId, createdAt } = isRead;
@@ -2614,9 +2622,9 @@ async function inject(extensionRootUrl) {
 			const $this = this;
 
 			const observer = () => {
-				const { isChatPage } = $this.app;
+				const { name } = $this.app.route.to;
 
-				if (isChatPage) {
+				if ('Chat' == name) {
 					const binds = document.querySelector('[id="binds"]');
 
 					if (!binds) {
@@ -2889,9 +2897,9 @@ async function inject(extensionRootUrl) {
 			const $this = this;
 
 			const observer = async () => {
-				const { isChatPage } = $this.app;
+				const { name } = $this.app.route.to;
 
-				if (isChatPage) {
+				if ('Chat' == name) {
 					const { currentChat } = $this.app.$store.state.chats;
 
 					const userId = parseInt(currentChat);
