@@ -422,14 +422,6 @@ async function inject(extensionRootUrl) {
 
 											let endDate = new Date();
 
-											const scheduleDate = new Date();
-
-											scheduleDate.setDate(scheduleDate.getDate() + 1);
-
-											scheduleDate.setHours(1);
-											scheduleDate.setMinutes(6);
-											scheduleDate.setSeconds(0);
-
 											const observer = async () => {
 												const response = await $this.fetchEngagementMessages('group', startDate, endDate);
 
@@ -476,12 +468,10 @@ async function inject(extensionRootUrl) {
 														sentCount,
 														viewedCount,
 														purchasedCount,
-														$this.formatDateTime(scheduleDate),
+														'',
 														true,
 														`https://onlyfans.com/my/chats/send?scheduleMessageId=${id}#forward`,
 													];
-
-													scheduleDate.setHours(scheduleDate.getHours() + 3);
 
 													return result;
 												}));
@@ -1763,16 +1753,36 @@ async function inject(extensionRootUrl) {
 												return userId != int__userId && !isNew;
 											});
 
-											const last_read_date = document.querySelector('[id="last_read_date"]');
+											const last_read_date = <HTMLAnchorElement>document.querySelector('[id="last_read_date"]');
 
 											if (isRead) {
-												const { createdAt } = isRead;
+												const { id: messageId, createdAt } = isRead;
 
 												const createdAt__date = new Date(createdAt);
 
 												const lastReadDate = formatter.format(createdAt__date);
 
-												if (last_read_date) last_read_date.textContent = lastReadDate;
+												if (last_read_date) {
+													last_read_date.textContent = lastReadDate;
+
+													last_read_date.href = `https://onlyfans.com/my/chats/chat/${int__userId}/?firstId=${messageId}`;
+
+													last_read_date.onclick = e => {
+														e.preventDefault();
+
+														const chat__messages: any = document.querySelector('.b-chat__messages');
+
+														if (chat__messages) {
+															const { __vue__: vue } = chat__messages;
+
+															const { scrollToMessage } = vue;
+
+															scrollToMessage(messageId);
+														}
+
+														return true;
+													};
+												}
 
 												resolve(createdAt__date);
 
@@ -1792,7 +1802,9 @@ async function inject(extensionRootUrl) {
 											if (200 < count) {
 												const lastReadDate = '>200msg';
 
-												if (last_read_date) last_read_date.textContent = lastReadDate;
+												if (last_read_date) {
+													last_read_date.textContent = lastReadDate;
+												}
 
 												resolve(lastReadDate);
 
@@ -1802,7 +1814,9 @@ async function inject(extensionRootUrl) {
 											if (31 < days) {
 												const lastReadDate = '>1month';
 
-												if (last_read_date) last_read_date.textContent = lastReadDate;
+												if (last_read_date) {
+													last_read_date.textContent = lastReadDate;
+												}
 
 												resolve(lastReadDate);
 
@@ -1812,7 +1826,9 @@ async function inject(extensionRootUrl) {
 											if (firstId == messageId) {
 												const lastReadDate = '>1month';
 
-												if (last_read_date) last_read_date.textContent = lastReadDate;
+												if (last_read_date) {
+													last_read_date.textContent = lastReadDate;
+												}
 
 												resolve(lastReadDate);
 
@@ -1842,7 +1858,7 @@ async function inject(extensionRootUrl) {
 										<li class="total-summ">TOTAL: ${totalSumm ? `$${totalSumm}` : 'FREE'}</li>
 										<li>Subscribed at: ${formatter.format(subscribeAt_date)}</li>
 										<li>Last transaction: ${lastTransaction ? formatter.format(lastTransaction) : 'not found'}</li>
-										<li>Last read: <span id="last_read_date">...</span></li>
+										<li>Last read: <a href="#" id="last_read_date">...</a></li>
 										<li class="${fromTrial ? 'from-trial-true' : 'from-trial-false'}">From trial: ${fromTrial ? 'yes' : 'no'}</li>
 										<li class="${isRebill ? 'is-rebill-true' : 'is-rebill-false'}">Rebill: ${isRebill ? 'yes' : 'no'}</li>
 										<li class="${subscribedOn ? 'subscribed-true' : 'subscribed-false'}">Subscriber: ${subscribedOn ? 'yes' : 'no'}</li>
