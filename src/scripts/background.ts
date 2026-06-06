@@ -3756,5 +3756,18 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 				date.setHours(date.getHours() + 3);
 			});
 		}
+
+		if (info.menuItemId === "close") {
+			const tabs = await chrome.tabs.query({
+				pinned: false,
+				url: 'https://*.onlyfans.com/my/queue*'
+			});
+
+			chrome.tabs.remove(tabs.slice(0, -1).map((tab: any) => {
+				const { id: tabId } = tab;
+
+				return tabId;
+			}));
+		}
 	}
 });
