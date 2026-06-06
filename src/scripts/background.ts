@@ -3706,6 +3706,8 @@ function sendmessage(mode) {
 }
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+	const { id: tabId } = tab;
+
 	const tabs = await chrome.tabs.query({
 		url: [
 			"*://onlyfans.com/*"
@@ -3714,12 +3716,6 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 	// Inbox && Notifications
 	{
-		const tabs = await chrome.tabs.query({
-			url: [
-				"*://onlyfans.com/my/chats*"
-			]
-		});
-
 		const modes = {
 			// Inbox
 			sendmessage_inbox: 'inbox',
@@ -3728,7 +3724,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 			// Notifications
 			sendmessage_all: 'all',
-			sendmessage_subscribers: 'ubscribers',
+			sendmessage_subscribers: 'subscribers',
 			sendmessage_purchases: 'purchases',
 			sendmessage_tips: 'tips',
 		};
@@ -3736,15 +3732,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 		const mode = modes[info.menuItemId];
 
 		if (mode) {
-			tabs.map((tab: any) => {
-				const { id: tabId } = tab;
-				chrome.scripting.executeScript({
-					injectImmediately: true,
-					target: { tabId: tabId, allFrames: false },
-					func: sendmessage,
-					args: [mode],
-					world: "MAIN"
-				});
+			chrome.scripting.executeScript({
+				injectImmediately: true,
+				target: { tabId: tabId, allFrames: false },
+				func: sendmessage,
+				args: [mode],
+				world: "MAIN"
 			});
 		}
 	}
