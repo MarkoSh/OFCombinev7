@@ -1,0 +1,47 @@
+{
+    "id": "ofcombine",
+    "title": "OFCombine",
+    "documentUrlPatterns": [
+        "*://onlyfans.com/*"
+    ],
+    "submenu": [
+        {
+            "id": "inbox",
+            "title": "Inbox",
+            "submenu": [
+                
+            ]
+        },
+        {
+            "id": "queue",
+            "title": "Queue",
+            "submenu": [
+                {
+                    "id": "setdate",
+                    "title": "Set date from current",
+                    "documentUrlPatterns": [
+                        "*://onlyfans.com/my/queue*"
+                    ]
+                },
+                {
+                    "id": "setdateext",
+                    "title": "Set date from selected",
+                    "documentUrlPatterns": [
+                        "*://onlyfans.com/my/queue/2*"
+                    ]
+                },
+                {
+                    "id": "post",
+                    "title": "Save ppvs"
+                },
+                {
+                    "type": "separator"
+                },
+                {
+                    "id": "close",
+                    "title": "Close submitted"
+                }
+            ]
+        }
+    ]
+}

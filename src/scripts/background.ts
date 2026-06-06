@@ -3529,7 +3529,10 @@ function tools() {
 					xhr.onloadend = function () {
 						const [event] = [...arguments];
 
-						if (429 === xhr.status) {
+						if (
+							429 === xhr.status ||
+							400 === xhr.status
+						) {
 							retryRequests.push(xhr);
 
 							return;
@@ -3585,4 +3588,173 @@ chrome.runtime.onMessage.addListener((message: any, sender: MessageSender, sendR
 	sendResponse({ pong: true });
 
 	injector();
+});
+
+// Генерация уникального ID
+function generateId() {
+	return `separator_${crypto.randomUUID()}`;
+}
+
+// Рекурсивная функция создания меню
+function createMenuFromConfig(item, parentId = null) {
+	const isSeparator = item.type === "separator";
+
+	// Для сепаратора генерируем ID автоматически
+	const itemId = item.id || (isSeparator ? generateId() : null);
+
+	// Если нет ID и это не сепаратор — ошибка конфигурации
+	if (!itemId) {
+		console.error("Ошибка: у пункта меню отсутствует id", item);
+		return;
+	}
+
+	const menuProps: any = {
+		id: itemId,
+		contexts: ["all"]
+	};
+
+	// Если это разделитель
+	if (isSeparator) {
+		menuProps.type = "separator";
+	} else {
+		menuProps.title = item.title;
+	}
+
+	// Если есть родитель — привязываем
+	if (parentId) {
+		menuProps.parentId = parentId;
+	}
+
+	// documentUrlPatterns — только если указано
+	if (item.documentUrlPatterns) {
+		menuProps.documentUrlPatterns = item.documentUrlPatterns;
+	}
+
+	chrome.contextMenus.create(menuProps, () => {
+		if (chrome.runtime.lastError) {
+			console.error(
+				`Ошибка при создании меню "${itemId}":`,
+				chrome.runtime.lastError.message
+			);
+		} else {
+			const typeLabel = isSeparator ? "(separator)" : "";
+			console.log(`Меню создано: "${itemId}" ${typeLabel}`);
+		}
+	});
+
+	// Если есть подменю — рекурсивно создаём дочерние элементы
+	if (!isSeparator && item.submenu && item.submenu.length > 0) {
+		for (const child of item.submenu) {
+			createMenuFromConfig(child, itemId);
+		}
+	}
+}
+
+// Загрузка JSON и построение меню
+async function loadMenu() {
+	try {
+		const url = chrome.runtime.getURL("menu.json");
+		const response = await fetch(url);
+
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}`);
+		}
+
+		const menuConfig = await response.json();
+
+		// Сначала удаляем старое меню (на случай обновления)
+		chrome.contextMenus.removeAll(() => {
+			createMenuFromConfig(menuConfig);
+			console.log("Меню успешно загружено из menu.json");
+		});
+	} catch (error) {
+		console.error("Не удалось загрузить menu.json:", error);
+	}
+}
+
+chrome.runtime.onInstalled.addListener((details: any) => {
+	loadMenu();
+});
+
+function setdate(scheduleDate: string) {
+	const app: any = document.querySelector('.m-chat-footer');
+
+	if (app) {
+		const { __vue__: vue } = app;
+
+		if (vue) {
+			vue.scheduleDate = scheduleDate;
+		}
+	}
+}
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+	const tabs = await chrome.tabs.query({
+		url: [
+			"*://onlyfans.com/*"
+		]
+	});
+
+	// Queue
+	{
+		const tabs = await chrome.tabs.query({
+			url: [
+				"*://onlyfans.com/my/chats/send*"
+			]
+		});
+
+		if (info.menuItemId === "setdate") {
+			const date = new Date();
+
+			date.setDate(date.getDate() + 1);
+
+			date.setHours(1);
+			date.setMinutes(6);
+			date.setSeconds(0);
+
+			tabs.map((tab: any) => {
+				const iso = date.toISOString();
+
+				const { id: tabId } = tab;
+				chrome.scripting.executeScript({
+					injectImmediately: true,
+					target: { tabId: tabId, allFrames: false },
+					func: setdate,
+					args: [iso],
+					world: "MAIN"
+				});
+
+				date.setHours(date.getHours() + 3);
+			});
+		}
+
+		if (info.menuItemId === "setdateext") {
+			const url = tab.url;
+
+			const match = url.match(/\d{4}-\d{2}-\d{2}/)?.[0];
+
+			const date = new Date(match);
+
+			date.setDate(date.getDate() + 1);
+
+			date.setHours(1);
+			date.setMinutes(6);
+			date.setSeconds(0);
+
+			tabs.map((tab: any) => {
+				const iso = date.toISOString();
+
+				const { id: tabId } = tab;
+				chrome.scripting.executeScript({
+					injectImmediately: true,
+					target: { tabId: tabId, allFrames: false },
+					func: setdate,
+					args: [iso],
+					world: "MAIN"
+				});
+
+				date.setHours(date.getHours() + 3);
+			});
+		}
+	}
 });

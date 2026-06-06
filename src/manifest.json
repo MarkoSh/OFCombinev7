@@ -45,6 +45,7 @@
 	],
 	"permissions": [
 		"alarms",
+		"contextMenus",
 		"scripting"
 	],
 	"host_permissions": [
