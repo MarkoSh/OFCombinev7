@@ -8,18 +8,21 @@
         {
             "id": "inbox",
             "title": "Inbox",
+            "documentUrlPatterns": [
+                "*://onlyfans.com/my/chats/*"
+            ],
             "submenu": []
         },
         {
             "id": "queue",
             "title": "Queue",
+            "documentUrlPatterns": [
+                "*://onlyfans.com/my/queue*"
+            ],
             "submenu": [
                 {
                     "id": "setdate",
-                    "title": "Set date from current",
-                    "documentUrlPatterns": [
-                        "*://onlyfans.com/my/queue*"
-                    ]
+                    "title": "Set date from current"
                 },
                 {
                     "id": "setdateext",

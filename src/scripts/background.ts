@@ -377,8 +377,6 @@ async function inject(extensionRootUrl) {
 													'sentCount',
 													'viewedCount',
 													'purchasedCount',
-													'dateScheduleTo',
-													'schedule',
 													'forwardLink',
 												],
 												columns: [
@@ -391,11 +389,6 @@ async function inject(extensionRootUrl) {
 													{},
 													{},
 													{},
-													{},
-													{
-														type: 'checkbox',
-														className: 'htCenter htMiddle',
-													},
 													{},
 												],
 												columnSorting: true,
@@ -468,8 +461,6 @@ async function inject(extensionRootUrl) {
 														sentCount,
 														viewedCount,
 														purchasedCount,
-														'',
-														true,
 														`https://onlyfans.com/my/chats/send?scheduleMessageId=${id}#forward`,
 													];
 
