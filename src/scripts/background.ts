@@ -3701,12 +3701,53 @@ function save() {
 	}
 }
 
+function sendmessage(mode) {
+	debugger;
+}
+
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 	const tabs = await chrome.tabs.query({
 		url: [
 			"*://onlyfans.com/*"
 		]
 	});
+
+	// Inbox && Notifications
+	{
+		const tabs = await chrome.tabs.query({
+			url: [
+				"*://onlyfans.com/my/chats*"
+			]
+		});
+
+		const modes = {
+			// Inbox
+			sendmessage_inbox: 'inbox',
+			sendmessage_spenders: 'spenders',
+			sendmessage_freebies: 'freebies',
+
+			// Notifications
+			sendmessage_all: 'all',
+			sendmessage_subscribers: 'ubscribers',
+			sendmessage_purchases: 'purchases',
+			sendmessage_tips: 'tips',
+		};
+
+		const mode = modes[info.menuItemId];
+
+		if (mode) {
+			tabs.map((tab: any) => {
+				const { id: tabId } = tab;
+				chrome.scripting.executeScript({
+					injectImmediately: true,
+					target: { tabId: tabId, allFrames: false },
+					func: sendmessage,
+					args: [mode],
+					world: "MAIN"
+				});
+			});
+		}
+	}
 
 	// Queue
 	{
