@@ -8,9 +8,7 @@
         {
             "id": "inbox",
             "title": "Inbox",
-            "submenu": [
-                
-            ]
+            "submenu": []
         },
         {
             "id": "queue",
@@ -31,7 +29,7 @@
                     ]
                 },
                 {
-                    "id": "post",
+                    "id": "save",
                     "title": "Save ppvs"
                 },
                 {

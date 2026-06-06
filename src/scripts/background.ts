@@ -3677,6 +3677,8 @@ chrome.runtime.onInstalled.addListener((details: any) => {
 });
 
 function setdate(scheduleDate: string) {
+	debugger;
+
 	const app: any = document.querySelector('.m-chat-footer');
 
 	if (app) {
@@ -3684,6 +3686,26 @@ function setdate(scheduleDate: string) {
 
 		if (vue) {
 			vue.scheduleDate = scheduleDate;
+
+			document.title = 'Date set';
+		}
+	}
+}
+
+function save() {
+	debugger;
+
+	const app: any = document.querySelector('.m-chat-footer');
+
+	if (app) {
+		const { __vue__: vue } = app;
+
+		if (vue) {
+			const { handleMessageSubmit } = vue;
+
+			handleMessageSubmit();
+
+			document.title = 'Saving...';
 		}
 	}
 }
@@ -3754,6 +3776,19 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 				});
 
 				date.setHours(date.getHours() + 3);
+			});
+		}
+
+		if (info.menuItemId === "save") {
+			tabs.map((tab: any) => {
+				const { id: tabId } = tab;
+				chrome.scripting.executeScript({
+					injectImmediately: true,
+					target: { tabId: tabId, allFrames: false },
+					func: save,
+					args: [],
+					world: "MAIN"
+				});
 			});
 		}
 
