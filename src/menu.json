@@ -11,7 +11,45 @@
             "documentUrlPatterns": [
                 "*://onlyfans.com/my/chats/*"
             ],
-            "submenu": []
+            "submenu": [
+                {
+                    "id": "sendmessage_inbox",
+                    "title": "Send message to inbox"
+                },
+                {
+                    "id": "sendmessage_spenders",
+                    "title": "Send message to spenders"
+                },
+                {
+                    "id": "sendmessage_freebies",
+                    "title": "Send message to freebies"
+                }
+            ]
+        },
+        {
+            "id": "notifications",
+            "title": "Notifications",
+            "documentUrlPatterns": [
+                "*://onlyfans.com/my/notifications/*"
+            ],
+            "submenu": [
+                {
+                    "id": "sendmessage_all",
+                    "title": "Send message to all"
+                },
+                {
+                    "id": "sendmessage_subscribers",
+                    "title": "Send message to subscribers"
+                },
+                {
+                    "id": "sendmessage_purchases",
+                    "title": "Send message to purchases"
+                },
+                {
+                    "id": "sendmessage_tips",
+                    "title": "Send message to tips"
+                }
+            ]
         },
         {
             "id": "queue",
