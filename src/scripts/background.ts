@@ -291,16 +291,24 @@ async function inject(extensionRootUrl) {
 						const forwardBtn = statistic__btns.querySelector('.forward-btn');
 
 						if (!forwardBtn) {
-							const button = statistic__btns.querySelector('button');
+							const button = <HTMLButtonElement>statistic__btns.querySelector('button');
 
 							if (button) {
-								const forwardBtn = <HTMLButtonElement>button.cloneNode(true);
+								const forwardBtn = document.createElement('a');
+
+								const classes = button.getAttribute('class') || '';
+
+								forwardBtn.setAttribute('class', classes);
 
 								forwardBtn.classList.add('forward-btn');
 
 								forwardBtn.innerHTML = 'Forward';
 
 								button.before(forwardBtn);
+
+								forwardBtn.href = '#';
+
+								forwardBtn.target = '_blank';
 
 								forwardBtn.onclick = e => {
 									const row: any = forwardBtn.closest('tr');
@@ -314,13 +322,7 @@ async function inject(extensionRootUrl) {
 
 										const link = `https://onlyfans.com/my/chats/send?scheduleMessageId=${scheduleMessageId}#forward`;
 
-										const a = document.createElement('a');
-
-										a.href = link;
-
-										a.target = '_blank';
-
-										a.click();
+										forwardBtn.href = link;
 									}
 								};
 							}
