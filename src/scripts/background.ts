@@ -3386,6 +3386,24 @@ function tools() {
 
 	console.log('[TOOLS] OFCombine v7');
 
+	class WorkerTimeout {
+		worker: any = null;
+		constructor(callback, timeout) {
+			const $this = this;
+			const blob = new Blob([`setTimeout(() => postMessage(0), ${timeout});`]);
+			const workerScript = URL.createObjectURL(blob);
+			$this.worker = new Worker(workerScript);
+			$this.worker.onmessage = () => {
+				callback();
+				$this.worker.terminate();
+			};
+		}
+		stop() {
+			const $this = this;
+			$this.worker.terminate();
+		}
+	}
+
 	window['retryRequests'] = [];
 
 	const observer = () => {
@@ -3409,7 +3427,7 @@ function tools() {
 			xhr.send(body);
 		};
 
-		setTimeout(observer, 1000 + Math.round(100 * Math.random()));
+		new WorkerTimeout(observer, 1000 + Math.round(100 * Math.random()));
 	};
 
 	observer();
@@ -3684,8 +3702,6 @@ function setdate(scheduleDate: string) {
 }
 
 function save() {
-	debugger;
-
 	const app: any = document.querySelector('.m-chat-footer');
 
 	if (app) {
