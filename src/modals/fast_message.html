@@ -1,16 +1,23 @@
-<div id="edit_bind_modal" class="combine-modal" style="display: block">
+<div id="fast_message_modal" class="combine-modal" style="display: block">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="edit_bind" action="/" method="post">
+        <div class="modal-content wide">
+            <form id="fast_message" action="/" method="post">
                 <header class="modal-header">
                     <h4 class="modal-title">Fast message for <a href="/my/chats/chat/{USERID}/?q={USERNAME}"
                             target="_blank">{NAME}({USERNAME}, {USERID})</a></h4>
                 </header>
                 <div class="modal-body">
+                    <div
+                        class="previous-messages text-center m-native-custom-scrollbar m-scrollbar-y m-scroll-behavior-auto m-scrollbar-always">
+                        <svg data-v-32391dd6="" class="m-nav-icon g-icon" data-icon-name="icon-loading"
+                            aria-hidden="true">
+                            <use href="#icon-loading" xlink:href="#icon-loading"></use>
+                        </svg>
+                    </div>
                     <fieldset>
                         <div>
                             <label for="data">Message</label>
-                            <textarea id="data" name="data" rows="10" required
+                            <textarea id="data" name="data" rows="5" required
                                 placeholder="Text message, markers: %name %emoji %send %answer %like"></textarea>
                             <ul class="markers">
                                 <li><a href="#" title="Will replace with name">%name</a></li>

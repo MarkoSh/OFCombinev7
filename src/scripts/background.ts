@@ -567,7 +567,7 @@ async function inject(extensionRootUrl) {
 
 							notification_item.appendChild(fast_message_chat);
 
-							fast_message_chat.onclick = e => {
+							fast_message_chat.onclick = async (e) => {
 								const { id: notificationId, user } = vue;
 
 								const { id: userId, name, username } = user;
@@ -584,6 +584,30 @@ async function inject(extensionRootUrl) {
 
 								if (modal) {
 									document.body.appendChild(modal);
+
+									const previous_messages = modal.querySelector('.previous-messages');
+
+									if (previous_messages) {
+										const messages = <Map<number, any>>await $this.fetchMessages(userId);
+
+										previous_messages.classList.remove('text-center');
+
+										previous_messages.innerHTML = '';
+
+										[...messages.values()].reverse().map((message: any) => {
+											const { fromUser, text } = message;
+
+											const { id: userId } = fromUser;
+
+											const div = document.createElement('div');
+
+											div.classList.add('message-baloon');
+
+											div.innerHTML = text
+
+											previous_messages.appendChild(div);
+										});
+									}
 								}
 							};
 						}
