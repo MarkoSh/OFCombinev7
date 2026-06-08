@@ -552,10 +552,6 @@ async function inject(extensionRootUrl) {
 					notification_items.forEach((notification_item: any) => {
 						const { __vue__: vue } = notification_item;
 
-						const { id: notificationId, user } = vue;
-
-						const { id: userId } = user;
-
 						const fast_message_chat = notification_item.querySelector('.fast-message-chat');
 
 						if (!fast_message_chat) {
@@ -572,7 +568,23 @@ async function inject(extensionRootUrl) {
 							notification_item.appendChild(fast_message_chat);
 
 							fast_message_chat.onclick = e => {
+								const { id: notificationId, user } = vue;
 
+								const { id: userId, name, username } = user;
+
+								const div = document.createElement('div');
+
+								div.innerHTML = $this.modals['fast_message']
+
+								div.innerHTML = div.innerHTML.replace(/{USERID}/g, userId);
+								div.innerHTML = div.innerHTML.replace(/{NAME}/g, name);
+								div.innerHTML = div.innerHTML.replace(/{USERNAME}/g, username);
+
+								const modal = <HTMLElement>div.firstChild;
+
+								if (modal) {
+									document.body.appendChild(modal);
+								}
 							};
 						}
 					});
@@ -1463,6 +1475,7 @@ async function inject(extensionRootUrl) {
 				'edit_bind',
 				'include_lists',
 				'include_fans',
+				'fast_message',
 			];
 
 			modals.map(async (modal) => {

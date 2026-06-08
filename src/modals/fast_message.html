@@ -3,21 +3,15 @@
         <div class="modal-content">
             <form id="edit_bind" action="/" method="post">
                 <header class="modal-header">
-                    <h4 class="modal-title">Edit bind</h4>
+                    <h4 class="modal-title">Fast message for <a href="/my/chats/chat/{USERID}/?q={USERNAME}"
+                            target="_blank">{NAME}({USERNAME}, {USERID})</a></h4>
                 </header>
                 <div class="modal-body">
                     <fieldset>
                         <div>
-                            <label for="hint">Hint</label>
-                            <input type="text" id="hint" name="hint" required placeholder="Hello %name"
-                                autocomplete="off" value="{HINT}">
-                        </div>
-                    </fieldset>
-                    <fieldset>
-                        <div>
-                            <label for="data">Binds</label>
+                            <label for="data">Message</label>
                             <textarea id="data" name="data" rows="10" required
-                                placeholder="Two lines for separate, markers: %name %emoji %send %answer %like">{TEXTS}</textarea>
+                                placeholder="Text message, markers: %name %emoji %send %answer %like"></textarea>
                             <ul class="markers">
                                 <li><a href="#" title="Will replace with name">%name</a></li>
                                 <li><a href="#" title="Will replace with random emoji">%emoji</a></li>
