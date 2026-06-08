@@ -594,19 +594,35 @@ async function inject(extensionRootUrl) {
 
 										previous_messages.innerHTML = '';
 
+										let prevMessageUserId = 0;
+
 										[...messages.values()].reverse().map((message: any) => {
 											const { fromUser, text } = message;
 
-											const { id: userId } = fromUser;
+											const { id: messageUserId } = fromUser;
 
 											const div = document.createElement('div');
 
 											div.classList.add('message-baloon');
 
-											div.innerHTML = text
+											if (prevMessageUserId != messageUserId) {
+												div.classList.add('margins');
+											}
+
+											div.innerHTML = `
+											<div class="message-wrapper ">
+												<div class="user display-${prevMessageUserId != messageUserId}">
+													<span class="avatar"></span> ${messageUserId}
+												</div>
+												<div class="text">${text}</div>
+											</div>`;
 
 											previous_messages.appendChild(div);
+
+											prevMessageUserId = messageUserId;
 										});
+
+										previous_messages.scrollTop = previous_messages.scrollHeight;
 									}
 								}
 							};
