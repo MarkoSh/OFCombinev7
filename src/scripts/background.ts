@@ -570,7 +570,7 @@ async function inject(extensionRootUrl) {
 							fast_message_chat.onclick = async (e) => {
 								const { id: notificationId, user } = vue;
 
-								const { id: userId, name, username } = user;
+								const { id: userId, avatar, name, username } = user;
 
 								const div = document.createElement('div');
 
@@ -601,23 +601,23 @@ async function inject(extensionRootUrl) {
 
 											const { id: messageUserId } = fromUser;
 
-											const div = document.createElement('div');
+											const avatar_ = (() => {
+												if (messageUserId == $this.app.authUserId) {
+													return $this.app.authUser.avatar;
+												}
 
-											div.classList.add('message-baloon');
+												return avatar ?? `https://static2.onlyfans.com/static/prod/f/${window['REV']}/icons/android-chrome-144x144.png`;
+											})();
 
-											if (prevMessageUserId != messageUserId) {
-												div.classList.add('margins');
-											}
+											const name_ = (() => {
+												if (messageUserId == $this.app.authUserId) {
+													return $this.app.authUser.name;
+												}
 
-											div.innerHTML = `
-											<div class="message-wrapper ">
-												<div class="user display-${prevMessageUserId != messageUserId}">
-													<span class="avatar"></span> ${messageUserId}
-												</div>
-												<div class="text">${text}</div>
-											</div>`;
+												return name;
+											})();
 
-											previous_messages.appendChild(div);
+											debugger;
 
 											prevMessageUserId = messageUserId;
 										});
