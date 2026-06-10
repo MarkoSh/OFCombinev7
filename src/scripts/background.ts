@@ -417,6 +417,8 @@ async function inject(extensionRootUrl) {
 
 											let endDate = new Date();
 
+											let step = 0;
+
 											const observer = async () => {
 												const response = await $this.fetchEngagementMessages('group', startDate, endDate);
 
@@ -471,15 +473,15 @@ async function inject(extensionRootUrl) {
 
 												hot.updateData(data);
 
-												if (!hasMore) {
+												step++;
+
+												if (!hasMore || 2 < step) {
 													wnd.alert('PPVs loaded');
 
 													return;
 												}
 
-												wnd.alert('PPVs loaded');
-
-												// setTimeout(observer, 100);
+												setTimeout(observer, 100);
 											};
 
 											observer();
