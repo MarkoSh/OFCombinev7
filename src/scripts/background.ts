@@ -2654,8 +2654,6 @@ async function inject(extensionRootUrl) {
 								tools.innerHTML += `
 									<a href="#" onclick="translateMessage(this, '')" title="Translate">💱</a>`;
 							}
-
-
 						}
 					}
 				});
