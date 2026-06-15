@@ -3153,7 +3153,7 @@ async function inject(extensionRootUrl) {
 			const $this = this;
 
 			const BASE_PATH = `/api2/v2/lists/${listId}/users`;
-			const PARAMS = `limit=10&format=infinite${offset ? `&offset=${offset}` : ''}`;
+			const PARAMS = `limit=100&format=infinite${offset ? `&offset=${offset}` : ''}`;
 
 			const path = `${BASE_PATH}?${PARAMS}`;
 
