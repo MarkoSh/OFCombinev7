@@ -229,6 +229,8 @@ async function inject(extensionRootUrl) {
 
 	const OFSign = new OFSignClient();
 
+	window['ofsign'] = OFSign;
+
 	class OFCombine {
 		app: any = false;
 		users: Map<number, any> = new Map();
