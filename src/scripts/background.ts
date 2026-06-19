@@ -3599,6 +3599,31 @@ function tools() {
 							429 === xhr.status ||
 							400 === xhr.status
 						) {
+							const { response } = xhr;
+
+							const json = (() => {
+								try {
+									const json = JSON.parse(response);
+
+									return json;
+								} catch (error) {
+								}
+
+								return false;
+							})();
+
+							if (json) {
+								const { error } = json;
+
+								if (error) {
+									const { code, message } = error;
+
+									if ('User not found' == message) {
+										return onloadend ? onloadend.apply(this, arguments) : null;
+									}
+								}
+							}
+
 							retryRequests.push(xhr);
 
 							return;
