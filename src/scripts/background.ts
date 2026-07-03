@@ -2350,21 +2350,31 @@ async function inject(extensionRootUrl) {
 						[squarePreview, thumb].filter((item: any) => item).forEach(async (item: any, index, self) => {
 							const { url } = item;
 
-							const response = await fetch(url);
-							const blob = await response.blob();
+							try {
+								const response = await fetch(url);
+								const blob = await response.blob();
 
-							const base64 = await new Promise((resolve, reject) => {
-								const reader = new FileReader();
-								reader.onloadend = () => resolve(reader.result);
-								reader.onerror = reject;
-								reader.readAsDataURL(blob);
-							});
+								const { size } = blob;
 
-							self[index].url = base64;
+								if (100 > (size / 1024)) {
+									const base64 = await new Promise((resolve, reject) => {
+										const reader = new FileReader();
+										reader.onloadend = () => resolve(reader.result);
+										reader.onerror = reject;
+										reader.readAsDataURL(blob);
+									});
+
+									self[index].url = base64;
+								}
+							} catch (error) {
+
+							}
 						});
 					});
 
 					draft.releaseForms = releaseFormsData;
+
+					console.log(JSON.stringify(draft).length / 1024 / 1024);
 
 					localStorage.setItem('MassDMTemplate', JSON.stringify(draft));
 
