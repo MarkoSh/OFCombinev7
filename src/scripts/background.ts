@@ -2336,9 +2336,35 @@ async function inject(extensionRootUrl) {
 				if (chat_footer) {
 					const { __vue__: vue } = chat_footer;
 
-					const { prepareDraftMessage } = vue;
+					const { prepareDraftMessage, releaseFormsData } = vue;
 
 					const draft = prepareDraftMessage();
+
+					const { uploadedFiles } = draft;
+
+					uploadedFiles.forEach((uploadedFile: any) => {
+						const { files } = uploadedFile;
+
+						const { squarePreview, thumb } = files;
+
+						[squarePreview, thumb].filter((item: any) => item).forEach(async (item: any, index, self) => {
+							const { url } = item;
+
+							const response = await fetch(url);
+							const blob = await response.blob();
+
+							const base64 = await new Promise((resolve, reject) => {
+								const reader = new FileReader();
+								reader.onloadend = () => resolve(reader.result);
+								reader.onerror = reject;
+								reader.readAsDataURL(blob);
+							});
+
+							self[index].url = base64;
+						});
+					});
+
+					draft.releaseForms = releaseFormsData;
 
 					localStorage.setItem('MassDMTemplate', JSON.stringify(draft));
 
