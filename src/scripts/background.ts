@@ -959,7 +959,7 @@ async function inject(extensionRootUrl) {
 													const suggestedName = $this.getCleanName(displayName || name || username || "");
 
 													const profileLink = `https://onlyfans.com/${username}`;
-													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${userId}`;
 
 													const [subscribeAt, totalSumm] = (() => {
 														if (subscribedOnData) {
@@ -1167,7 +1167,7 @@ async function inject(extensionRootUrl) {
 													const suggestedName = $this.getCleanName(displayName || name || username || "");
 
 													const profileLink = `https://onlyfans.com/${username}`;
-													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${userId}`;
 
 													const [subscribeAt, totalSumm] = (() => {
 														if (subscribedOnData) {
@@ -1383,7 +1383,7 @@ async function inject(extensionRootUrl) {
 													const suggestedName = $this.getCleanName(displayName || name || username || "");
 
 													const profileLink = `https://onlyfans.com/${username}`;
-													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${username}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${userId}`;
 
 													const [subscribeAt, totalSumm] = (() => {
 														if (subscribedOnData) {
@@ -2323,7 +2323,7 @@ async function inject(extensionRootUrl) {
 				}
 			}
 		}
-		saveTmpl(args) {
+		async saveTmpl(args) {
 			const $this = this;
 
 			const chats__conversations: any = document.querySelector('.b-chats__conversations');
@@ -2342,35 +2342,50 @@ async function inject(extensionRootUrl) {
 
 					const { uploadedFiles } = draft;
 
-					uploadedFiles.forEach((uploadedFile: any) => {
-						const { files } = uploadedFile;
+					const proms = uploadedFiles.map((uploadedFile: any) => {
+						return new Promise<void>(async (resolve, reject) => {
+							const { files } = uploadedFile;
 
-						const { squarePreview, thumb } = files;
+							const { squarePreview, thumb } = files;
 
-						[squarePreview, thumb].filter((item: any) => item).forEach(async (item: any, index, self) => {
-							const { url } = item;
+							const proms = [squarePreview, thumb].filter((item: any) => item).map(async (item: any, index, self) => {
+								return new Promise<void>(async (resolve, reject) => {
+									const { url } = item;
 
-							try {
-								const response = await fetch(url);
-								const blob = await response.blob();
+									try {
+										const response = await fetch(url);
+										const blob = await response.blob();
 
-								const { size } = blob;
+										const { size } = blob;
 
-								if (100 > (size / 1024)) {
-									const base64 = await new Promise((resolve, reject) => {
-										const reader = new FileReader();
-										reader.onloadend = () => resolve(reader.result);
-										reader.onerror = reject;
-										reader.readAsDataURL(blob);
-									});
+										if (200 > (size / 1024)) {
+											const base64 = await new Promise((resolve, reject) => {
+												const reader = new FileReader();
+												reader.onloadend = () => resolve(reader.result);
+												reader.onerror = reject;
+												reader.readAsDataURL(blob);
+											});
 
-									self[index].url = base64;
-								}
-							} catch (error) {
+											self[index].url = base64;
 
-							}
+											resolve();
+										} else {
+											resolve();
+										}
+									} catch (error) {
+										resolve();
+									}
+								});
+
+							});
+
+							await Promise.all(proms);
+
+							resolve();
 						});
 					});
+
+					await Promise.all(proms);
 
 					draft.releaseForms = releaseFormsData;
 
