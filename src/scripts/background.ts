@@ -2348,7 +2348,7 @@ async function inject(extensionRootUrl) {
 
 							const { squarePreview, thumb } = files;
 
-							const proms = [squarePreview, thumb].filter((item: any) => item).map(async (item: any, index, self) => {
+							const proms = [thumb].filter((item: any) => item).map(async (item: any, index, self) => {
 								return new Promise<void>(async (resolve, reject) => {
 									const { url } = item;
 
@@ -3141,60 +3141,68 @@ async function inject(extensionRootUrl) {
 
 						const user = data[int__userId];
 
-						const { subscribedOnData } = user;
+						if (user) {
+							const { subscribedOnData } = user;
 
-						if (subscribedOnData) {
-							const { totalSumm } = subscribedOnData;
+							if (subscribedOnData) {
+								const { totalSumm } = subscribedOnData;
 
-							if (0 < totalSumm && !noextra) {
-								const BASE_PATH = `/api2/v2/users/notifications`;
+								if (0 < totalSumm && !noextra) {
+									const BASE_PATH = `/api2/v2/users/notifications`;
 
-								const types = [
-									'subscribed',
-									'purchases',
-									'tip',
-								];
+									const types = [
+										'subscribed',
+										'purchases',
+										'tip',
+									];
 
-								const proms = types.map((type) => {
-									return new Promise(async (resolve, reject) => {
-										const PARAMS = `limit=1&type=${type}&related_user=${int__userId}&skip_users=all&format=infinite`;
+									const proms = types.map((type) => {
+										return new Promise(async (resolve, reject) => {
+											const PARAMS = `limit=1&type=${type}&related_user=${int__userId}&skip_users=all&format=infinite`;
 
-										const path = `${BASE_PATH}?${PARAMS}`;
+											const path = `${BASE_PATH}?${PARAMS}`;
 
-										const response = await queue.add(async () => await OFSign.get(path));
+											const response = await queue.add(async () => await OFSign.get(path));
 
-										const data: any = await response.json();
+											const data: any = await response.json();
 
-										const { list } = data;
+											const { list } = data;
 
-										resolve(list[0] ?? false);
-									})
+											if (list) {
+												resolve(list[0] ?? false);
 
-								});
+												return;
+											}
 
-								const results = await Promise.all(proms);
+											resolve(false);
+										})
 
-								const lastTransaction = results.filter(result => result).map((transaction: any) => {
-									const { type, replacePairs, createdAt } = transaction;
+									});
 
-									const price = replacePairs['{PRICE}'];
+									const results = await Promise.all(proms);
 
-									if ('subscribed' == type) {
-										if (price) {
-											return new Date(createdAt);
-										} else {
-											return false;
+									const lastTransaction = results.filter(result => result).map((transaction: any) => {
+										const { type, replacePairs, createdAt } = transaction;
+
+										const price = replacePairs['{PRICE}'];
+
+										if ('subscribed' == type) {
+											if (price) {
+												return new Date(createdAt);
+											} else {
+												return false;
+											}
 										}
-									}
 
-									return new Date(createdAt);
-								}).filter((transaction: any) => transaction).sort((a: any, b: any) => b - a)[0] ?? false;
+										return new Date(createdAt);
+									}).filter((transaction: any) => transaction).sort((a: any, b: any) => b - a)[0] ?? false;
 
-								user.lastTransaction = lastTransaction;
+									user.lastTransaction = lastTransaction;
+								}
 							}
-						}
 
-						users.set(int__userId, user);
+							users.set(int__userId, user);
+						}
 					}
 				}
 
