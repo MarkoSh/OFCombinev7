@@ -959,7 +959,7 @@ async function inject(extensionRootUrl) {
 													const suggestedName = $this.getCleanName(displayName || name || username || "");
 
 													const profileLink = `https://onlyfans.com/${username}`;
-													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${userId}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=u${userId}`;
 
 													const [subscribeAt, totalSumm] = (() => {
 														if (subscribedOnData) {
@@ -1167,7 +1167,7 @@ async function inject(extensionRootUrl) {
 													const suggestedName = $this.getCleanName(displayName || name || username || "");
 
 													const profileLink = `https://onlyfans.com/${username}`;
-													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${userId}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=u${userId}`;
 
 													const [subscribeAt, totalSumm] = (() => {
 														if (subscribedOnData) {
@@ -1383,7 +1383,7 @@ async function inject(extensionRootUrl) {
 													const suggestedName = $this.getCleanName(displayName || name || username || "");
 
 													const profileLink = `https://onlyfans.com/${username}`;
-													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=${userId}`;
+													const chatLink = `https://onlyfans.com/my/chats/chat/${userId}/?q=u${userId}`;
 
 													const [subscribeAt, totalSumm] = (() => {
 														if (subscribedOnData) {
