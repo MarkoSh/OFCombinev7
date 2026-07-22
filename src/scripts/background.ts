@@ -193,6 +193,16 @@ async function inject(extensionRootUrl) {
 			});
 		}
 
+		async del<T>(path: string, body: T): Promise<Response> {
+			return this.fetch(path, {
+				method: 'DELETE',
+				headers: {
+					'content-type': 'application/json'
+				},
+				body: JSON.stringify(body)
+			});
+		}
+
 		async put<T>(path: string, body: T): Promise<Response> {
 			return this.fetch(path, {
 				method: 'PUT',
@@ -3401,6 +3411,48 @@ async function inject(extensionRootUrl) {
 				};
 
 				observer();
+			});
+		}
+
+		doSubscribe(userId: number = 0) {
+			const $this = this;
+
+			return new Promise<void>(async (resolve, reject) => {
+				if (!userId) return false;
+
+				const path = `/api2/v2/users/${userId}/subscribe`;
+
+				const body = {
+					source: 'profile'
+				}
+
+				// const response: any = await queue.add(async () => await OFSign.post(path, body));
+				const response: any = await OFSign.post(path, body);
+
+				const data = await response.json();
+
+				resolve(data);
+			});
+		}
+
+		doUnsubscribe(userId: number = 0) {
+			const $this = this;
+
+			return new Promise<void>(async (resolve, reject) => {
+				if (!userId) return false;
+
+				const path = `/api2/v2/users/${userId}/subscribe`;
+
+				const body = {
+					reason: 0
+				}
+
+				// const response: any = await queue.add(async () => await OFSign.post(path, body));
+				const response: any = await OFSign.del(path, body);
+
+				const data = await response.json();
+
+				resolve(data);
 			});
 		}
 	}
